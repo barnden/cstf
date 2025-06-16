@@ -35,7 +35,7 @@ struct CSTFHeader {
 
         stream->read(reinterpret_cast<char*>(&reserved), 2);
 
-        *stream  >> version >> tick_rate;
+        *stream >> version >> tick_rate;
 
         std::getline(*stream, map_name, '\0');
 

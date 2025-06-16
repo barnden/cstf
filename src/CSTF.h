@@ -55,22 +55,29 @@ public:
     }
 
     template<size_t alignment>
-    void consume_padding() const
+    auto consume_padding() const -> size_t
     {
         char dummy;
         auto padding = (static_cast<size_t>(m_stream.tellg()) + alignment) % alignment;
         for (auto i = 0uz; i < padding; i++) {
             m_stream.read(&dummy, 1);
+
+            if (dummy != '\0')
+                std::println("consume_padding got non-null byte {:01x} at position {}", dummy , static_cast<size_t>(m_stream.tellg()));
         }
+
+        return padding;
     }
 
-    void consume_padding(int alignment) const
+    auto consume_padding(int alignment) const -> size_t
     {
         char dummy;
         auto padding = (static_cast<size_t>(m_stream.tellg()) + alignment) % alignment;
         for (auto i = 0uz; i < padding; i++) {
             m_stream.read(&dummy, 1);
         }
+
+        return padding;
     }
 
     [[nodiscard]] auto operator*() const -> std::ifstream& { return m_stream; }
