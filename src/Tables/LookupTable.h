@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CSTF.h"
+#include "Types.h"
 
 #include <cxxabi.h>
 #include <vector>
@@ -8,11 +8,15 @@
 namespace CSTF {
 
 template <class Entry, size_t Alignment = 4>
-struct CSTFLookupTable {
-    std::vector<Entry> entries {};
+class LookupTable {
+protected:
 
-    CSTFLookupTable() = default;
-    CSTFLookupTable(Stream stream)
+public:
+static constexpr size_t alignment = Alignment;
+
+std::vector<Entry> m_entries {};
+    LookupTable() = default;
+    LookupTable(Stream stream)
     {
         stream.consume_padding<Alignment>();
 
@@ -20,19 +24,19 @@ struct CSTFLookupTable {
         stream->read(reinterpret_cast<char*>(&num_bytes), 4);
 
         auto size = num_bytes / sizeof(Entry);
-        entries = std::vector<Entry>(size);
+        m_entries = std::vector<Entry>(size);
 
-        stream->read(reinterpret_cast<char*>(entries.data()), num_bytes);
+        stream->read(reinterpret_cast<char*>(m_entries.data()), num_bytes);
     }
 
-    virtual ~CSTFLookupTable() { };
+    virtual ~LookupTable() = default;
 
     [[nodiscard]] virtual auto to_string() const -> std::string
     {
         int status {};
 
         char* type = abi::__cxa_demangle(typeid(Entry).name(), NULL, NULL, &status);
-        std::string result = std::format("CSTFLookupTable<{}>(size: {})", type, entries.size());
+        std::string result = std::format("LookupTable<{}>(size: {})", type, m_entries.size());
         free(type);
 
         return result;

@@ -1,21 +1,20 @@
 #pragma once
 
-#include "CSTF.h"
+#include "Types.h"
 
 #include <fstream>
-#include <ranges>
 #include <string>
 
 namespace CSTF {
 
-struct CSTFGameData {
+struct GameData {
     std::array<u64, 10> players;
     std::array<std::string, 2> team_tags;
     std::array<std::string, 2> team_names;
     std::array<std::string, 10> usernames;
 
-    CSTFGameData() = default;
-    CSTFGameData(Stream stream)
+    GameData() = default;
+    GameData(Stream stream)
     {
         stream.consume_padding<4>();
 
@@ -41,10 +40,10 @@ struct CSTFGameData {
         std::string steamids {};
 
         steamids += "[";
-        for (auto&& [i, player] : enumerate(players)) {
+        for (auto const&& [i, player] : enumerate(players)) {
             steamids += SteamID(player).to_string();
 
-            if (i != players.size() - 1uz)
+            if (i != static_cast<int>(players.size()) - 1)
                 steamids += ", ";
         }
         steamids += "]";

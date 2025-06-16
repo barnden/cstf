@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CSTF.h"
+#include "Types.h"
 
 #include <fstream>
 #include <ranges>
@@ -8,7 +8,10 @@
 
 namespace CSTF {
 
-struct CSTFHeader {
+class Header {
+    static constexpr auto g_magic_bytes = std::array<u8, 3> { 0xC5, 0x7F, 0x8B };
+
+public:
     enum class Flags {
         GSI = 1 << 0,
         MIRV = 1 << 1,
@@ -26,16 +29,25 @@ struct CSTFHeader {
     std::string map_name = {};
     u32 map_crc = 0;
 
-    CSTFHeader() = default;
-    CSTFHeader(Stream stream)
+    Header() = default;
+
+    Header(std::string const& map_name, u32 map_crc, u8 flags, u8 tick_rate = 64)
+        : cstf_magic(g_magic_bytes)
+        , flags(flags)
+        , version(1)
+        , tick_rate(tick_rate)
+        , map_name(map_name)
+        , map_crc(map_crc) { };
+
+    Header(Stream stream)
     {
         stream->read(reinterpret_cast<char*>(&cstf_magic), sizeof(cstf_magic));
 
-        *stream >> flags;
+        stream >> flags;
 
         stream->read(reinterpret_cast<char*>(&reserved), 2);
 
-        *stream >> version >> tick_rate;
+        stream >> version >> tick_rate;
 
         std::getline(*stream, map_name, '\0');
 
@@ -45,8 +57,6 @@ struct CSTFHeader {
     [[nodiscard]] constexpr auto is_valid() const noexcept -> bool
     {
         using std::views::zip;
-
-        static constexpr auto g_magic_bytes = { 0xC5, 0x7F, 0x8B };
 
         for (auto const&& [byte, magic] : zip(cstf_magic, g_magic_bytes)) {
             if (byte != magic)
@@ -59,7 +69,7 @@ struct CSTFHeader {
     [[nodiscard]] auto to_string() const -> std::string
     {
         return std::format(
-            "CSTFHeader(magic: {:X}{:X}{:X}, flags: {:08B}, reserved: {:04X}, version: {}, tick_rate: {}, map: {}, crc: {:x})",
+            "Header(magic: {:X}{:X}{:X}, flags: {:08B}, reserved: {:04X}, version: {}, tick_rate: {}, map: {}, crc: {:x})",
             cstf_magic[0], cstf_magic[1], cstf_magic[2], flags, reserved, version,
             static_cast<int>(tick_rate), map_name, map_crc);
     }
