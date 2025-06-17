@@ -8,9 +8,9 @@ namespace CSTF {
 
 #pragma pack(1)
 struct EventLUTEntry {
-    u32 offset : 24 {};
-    u16 next : 15 {};
-    u8 frames : 3 {};
+    u32 offset : 20 {};
+    u32 next : 18 {};
+    u8 frames : 4 {};
     u8 type : 6 {};
 
     [[nodiscard]] auto to_string() const -> std::string
@@ -38,7 +38,7 @@ struct EventLUT : public LookupTable<EventLUTEntry> {
 
         for (auto&& entry : m_entries) {
             u32 offset = entry.offset;
-            auto position = start + 4 * offset;
+            auto position = start + 2 * offset;
             stream->seekg(position);
 
             for_sequence<2>([&](auto i) {
