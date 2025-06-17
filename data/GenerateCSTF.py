@@ -23,12 +23,14 @@ steamids = [
     76561198039184405,
     76561198039184405,
     76561198039184405,
+    76561198039184405,
 ]
 
 tags = [b"Tag A\0", b"Tag B\0"]
 teams = [b"Team A\0", b"Team B\0"]
 
 usernames = [f"player {x}\0".encode("utf-8") for x in range(10)]
+usernames += [b"dummy\0"]
 
 # Round LUT
 CSTF_round_LUT = [
@@ -187,9 +189,10 @@ with open("example.cstf", "wb") as file:
 
     pad(file)
 
+    file.write(to_bytes(4)(len(steamids)))
     file.write(b"".join(map(to_bytes(8), steamids)))
 
-    for string in tags + teams + usernames:
+    for string in usernames + tags + teams:
         file.write(string)
 
     pad(file)

@@ -4,22 +4,35 @@
 
 #include <fstream>
 #include <string>
+#include <vector>
 
 namespace CSTF {
 
 struct GameData {
-    std::array<u64, 10> players;
+    std::vector<u64> players { 10, 0 };
+    std::vector<std::string> usernames { 10 };
     std::array<std::string, 2> team_tags;
     std::array<std::string, 2> team_names;
-    std::array<std::string, 10> usernames;
 
     GameData() = default;
     GameData(Stream stream)
     {
         stream.consume_padding<4>();
 
+        u32 player_count {};
+        player_count &= 0xFF;
+
+        stream->read(reinterpret_cast<char*>(&player_count), 4);
+
+        players.resize(player_count);
+        usernames.resize(player_count);
+
         for (auto&& player : players) {
             stream->read(reinterpret_cast<char*>(&player), 8);
+        }
+
+        for (auto&& username : usernames) {
+            std::getline(*stream, username, '\0');
         }
 
         for (auto&& tag : team_tags) {
@@ -28,10 +41,6 @@ struct GameData {
 
         for (auto&& name : team_names) {
             std::getline(*stream, name, '\0');
-        }
-
-        for (auto&& username : usernames) {
-            std::getline(*stream, username, '\0');
         }
     }
 
