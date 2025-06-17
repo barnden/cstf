@@ -7,11 +7,12 @@ namespace CSTF {
 
 #pragma pack(1)
 struct PlayerDamageEvent {
+    u8 padding {};
     u8 source {};
     u8 armor {};
     u8 health {};
-    u8 victim : 4 {};
-    u8 attacker : 4 {};
+    u8 victim {};
+    u8 attacker {};
 
     auto to_string() const -> std::string
     {

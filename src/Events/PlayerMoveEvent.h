@@ -7,9 +7,10 @@ namespace CSTF {
 
 #pragma pack(1)
 struct _PlayerMoveEventData {
-    u16 yaw : 15;
-    u16 pitch : 13;
-    u8 player : 4;
+    u8 padding {};
+    u32 yaw : 24 {};
+    u32 pitch : 24 {};
+    u8 player {};
 };
 #pragma pack()
 
@@ -17,8 +18,15 @@ struct PlayerMoveEvent {
     _PlayerMoveEventData data {};
     float position[3] {};
 
-    [[nodiscard]] constexpr auto yaw() const noexcept -> float { return static_cast<float>(data.pitch) / ((1ul << 13) - 1) * 180.; }
-    [[nodiscard]] constexpr auto pitch() const noexcept -> float { return static_cast<float>(data.yaw) / ((1ul << 15) - 1) * 360.; }
+    [[nodiscard]] constexpr auto pitch() const noexcept -> float
+    {
+        return static_cast<float>(data.pitch) / ((1ul << 24) - 1) * 180.;
+    }
+
+    [[nodiscard]] constexpr auto yaw() const noexcept -> float
+    {
+        return static_cast<float>(data.yaw) / ((1ul << 24) - 1) * 360.;
+    }
 
     auto to_string() const -> std::string
     {
@@ -29,7 +37,5 @@ struct PlayerMoveEvent {
                            position);
     }
 };
-
-static_assert(sizeof(PlayerMoveEvent) == 16);
 
 }
