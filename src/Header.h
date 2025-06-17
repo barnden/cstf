@@ -21,23 +21,23 @@ public:
         UTILITY = 1 << 5
     };
 
-    std::array<u8, 3> cstf_magic = {};
+    std::array<u8, 3> cstf_magic {};
     u8 flags = 0;
     u16 reserved = 0;
     u8 version = 0;
     u8 tick_rate = 0;
-    std::string map_name = {};
-    u32 map_crc = 0;
+    std::string map_name {};
+    u32 build_info = 0;
 
     Header() = default;
 
-    Header(std::string const& map_name, u32 map_crc, u8 flags, u8 tick_rate = 64)
+    Header(std::string const& map_name, u32 build_info, u8 flags, u8 tick_rate = 64)
         : cstf_magic(g_magic_bytes)
         , flags(flags)
         , version(1)
         , tick_rate(tick_rate)
         , map_name(map_name)
-        , map_crc(map_crc) { };
+        , build_info(build_info) { };
 
     Header(Stream stream)
     {
@@ -51,7 +51,7 @@ public:
 
         std::getline(*stream, map_name, '\0');
 
-        stream->read(reinterpret_cast<char*>(&map_crc), 4);
+        stream->read(reinterpret_cast<char*>(&build_info), 4);
     }
 
     [[nodiscard]] constexpr auto is_valid() const noexcept -> bool
@@ -69,9 +69,9 @@ public:
     [[nodiscard]] auto to_string() const -> std::string
     {
         return std::format(
-            "Header(magic: {:X}{:X}{:X}, flags: {:08B}, reserved: {:04X}, version: {}, tick_rate: {}, map: {}, crc: {:x})",
+            "Header(magic: {:X}{:X}{:X}, flags: {:08B}, reserved: {:04X}, version: {}, tick_rate: {}, map: {}, build_info: {:x})",
             cstf_magic[0], cstf_magic[1], cstf_magic[2], flags, reserved, version,
-            static_cast<int>(tick_rate), map_name, map_crc);
+            static_cast<int>(tick_rate), map_name, build_info);
     }
 };
 
