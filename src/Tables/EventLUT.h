@@ -1,8 +1,9 @@
 #pragma once
 
-#include "Types.h"
-#include "Tables/LookupTable.h"
+#include "Events/BaseEvent.h"
 #include "Events/Events.h"
+#include "Tables/LookupTable.h"
+#include "Types.h"
 
 namespace CSTF {
 
@@ -24,16 +25,15 @@ struct EventLUTEntry : IStringable<EventLUTEntry> {
 static_assert(sizeof(EventLUTEntry) == 6);
 
 struct EventLUT : public LookupTable<EventLUTEntry> {
-    // FIXME (1): vector of variants makes me sad ;(
     std::vector<EventTypes::variant_t> events {};
 
     EventLUT() = default;
-    EventLUT(Stream stream)
+    EventLUT(istream stream)
         : LookupTable<EventLUTEntry>(stream)
     {
         events.reserve(m_entries.size());
 
-        stream.consume_padding<4>();
+        stream.consume_padding(4);
         size_t start = stream->tellg();
 
         for (auto&& entry : m_entries) {
@@ -41,17 +41,15 @@ struct EventLUT : public LookupTable<EventLUTEntry> {
             auto position = start + 2 * offset;
             stream->seekg(position);
 
-            for_sequence<2>([&](auto i) {
-                using Event = EventTypes::get<i>;
+            for_sequence<2>(
+                [&](auto i) {
+                    using EventType = EventTypes::get<i>;
 
-                if (entry.type != i)
-                    return;
+                    if (entry.type != i)
+                        return;
 
-                auto event = Event {};
-                stream->read(reinterpret_cast<char*>(&event), sizeof(Event));
-
-                events.push_back(event);
-            });
+                    events.push_back(std::move(EventType::from(stream)));
+                });
         }
     }
 };

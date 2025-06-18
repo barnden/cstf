@@ -13,7 +13,7 @@ struct type_array {
     using tuple_t = std::tuple<T...>;
     using variant_t = std::variant<T...>;
 
-    template<size_t I>
+    template <size_t I>
     using get = std::tuple_element_t<I, tuple_t>;
 
     static constexpr size_t size = sizeof...(T);
