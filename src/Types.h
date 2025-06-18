@@ -4,8 +4,9 @@
 #include <cstdint>
 #include <cxxabi.h>
 #include <format>
-#include <fstream>
 #include <ranges>
+
+#include "Stream.h"
 
 // Copied from https://www.reddit.com/r/cpp/comments/l37uui/comment/gkdag33/
 template <typename T, T... S, typename F>
@@ -102,51 +103,24 @@ struct SteamID : public IStringable<SteamID> {
     }
 };
 
-class istream {
-    std::ifstream& m_stream;
-    std::ios_base::fmtflags m_flags;
-
-public:
-    istream(std::ifstream& stream)
-        : m_stream(stream)
-        , m_flags(stream.flags())
-    {
-        m_stream >> std::noskipws;
-    }
-
-    auto consume_padding(int alignment) const -> size_t
-    {
-        auto remainder = static_cast<size_t>(m_stream.tellg()) % alignment;
-
-        if (remainder == 0)
-            return 0;
-
-        auto padding = alignment - remainder;
-        char dummy;
-
-        for (auto i = 0uz; i < padding; i++)
-            m_stream.read(&dummy, 1);
-
-        return padding;
-    }
-
-    template <typename T>
-    auto operator>>(T& rhs) const -> istream const&
-    {
-        m_stream >> rhs;
-        return *this;
-    }
-
-    [[nodiscard]] auto operator*() const -> std::ifstream& { return m_stream; }
-    [[nodiscard]] auto operator->() const -> std::ifstream* { return &m_stream; }
-
-    ~istream() { m_stream.flags(m_flags); }
-};
-
 struct float3 {
     float x;
     float y;
     float z;
+};
+
+template <typename Derived>
+class ISerializable {
+public:
+    void deserialize(istream const& stream)
+    {
+        stream->read(reinterpret_cast<char*>(this), sizeof(Derived));
+    }
+
+    void serialize(std::ostream& stream) const
+    {
+        stream.write(reinterpret_cast<char*>(this), sizeof(Derived));
+    }
 };
 
 };

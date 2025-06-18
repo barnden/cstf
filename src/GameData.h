@@ -2,20 +2,20 @@
 
 #include "Types.h"
 
-#include <fstream>
 #include <string>
 #include <vector>
 
 namespace CSTF {
 
-struct GameData : IStringable<GameData> {
+struct GameData : IStringable<GameData>, ISerializable<GameData> {
     std::vector<SteamID> players { 10 };
     std::vector<std::string> usernames { 10 };
     std::array<std::string, 2> team_tags;
     std::array<std::string, 2> team_names;
 
     GameData() = default;
-    GameData(istream stream)
+
+    void deserialize(istream const& stream)
     {
         stream.consume_padding(4);
 
@@ -41,6 +41,30 @@ struct GameData : IStringable<GameData> {
 
         for (auto&& name : team_names) {
             std::getline(*stream, name, '\0');
+        }
+    }
+
+    void serialize(ostream const& stream) const
+    {
+        stream.pad(4);
+
+        u32 player_count = players.size();
+        stream->write(reinterpret_cast<char const*>(&player_count), 4);
+
+        for (auto&& player : players) {
+            stream->write(reinterpret_cast<char const*>(&player), 8);
+        }
+
+        for (auto&& username : usernames) {
+            stream->write(username.c_str(), username.size() + 1);
+        }
+
+        for (auto&& tag : team_tags) {
+            stream->write(tag.c_str(), tag.size() + 1);
+        }
+
+        for (auto&& name : team_names) {
+            stream->write(name.c_str(), name.size() + 1);
         }
     }
 

@@ -2,13 +2,12 @@
 
 #include "Types.h"
 
-#include <fstream>
 #include <ranges>
 #include <string>
 
 namespace CSTF {
 
-class Header : IStringable<Header> {
+class Header : IStringable<Header>, public ISerializable<Header> {
     static constexpr auto g_magic_bytes = std::array<u8, 3> { 0xC5, 0x7F, 0x8B };
 
 public:
@@ -39,7 +38,7 @@ public:
         , map_name(map_name)
         , build_info(build_info) { };
 
-    Header(istream stream)
+    void deserialize(istream const& stream)
     {
         stream->read(reinterpret_cast<char*>(&cstf_magic), sizeof(cstf_magic));
 
@@ -52,6 +51,21 @@ public:
         std::getline(*stream, map_name, '\0');
 
         stream->read(reinterpret_cast<char*>(&build_info), 4);
+    }
+
+    void serialize(ostream const& stream) const
+    {
+        stream->write(reinterpret_cast<char const*>(&cstf_magic), sizeof(cstf_magic));
+
+        stream << flags;
+
+        stream->write(reinterpret_cast<char const*>(&reserved), 2);
+
+        stream << version << tick_rate;
+
+        stream->write(map_name.c_str(), map_name.size() + 1);
+
+        stream->write(reinterpret_cast<char const*>(&build_info), 4);
     }
 
     [[nodiscard]] constexpr auto is_valid() const noexcept -> bool

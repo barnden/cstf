@@ -12,19 +12,21 @@
 
 namespace CSTF {
 
-class CSTF : IStringable<CSTF> {
-    Header m_header;
-    GameData m_game_data;
-    RoundLUT m_rounds;
+class CSTF : public IStringable<CSTF>, public ISerializable<CSTF> {
+    Header m_header {};
+    GameData m_game_data {};
+    RoundLUT m_rounds {};
 
     std::vector<EventLUT> m_events {};
 
 public:
-    CSTF(istream stream)
+    CSTF() = default;
+
+    void deserialize(istream const& stream)
     {
-        m_header = Header(stream);
-        m_game_data = GameData(stream);
-        m_rounds = RoundLUT(stream);
+        m_header.deserialize(stream);
+        m_game_data.deserialize(stream);
+        m_rounds.deserialize(stream);
 
         stream.consume_padding(RoundLUT::alignment);
         size_t event_base = stream->tellg();
@@ -36,8 +38,16 @@ public:
             auto position = event_base + 4 * entry.offset;
             stream->seekg(position);
 
-            m_events.emplace_back(stream);
+            auto lut = EventLUT {};
+            lut.deserialize(stream);
+
+            m_events.push_back(lut);
         }
+    }
+
+    void serialize(ostream const& stream) const {
+        m_header.serialize(stream);
+        m_game_data.serialize(stream);
     }
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
