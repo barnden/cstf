@@ -42,7 +42,7 @@ struct EventLUT : public LookupTable<EventLUTEntry, EventTypes::variant_t> {
 
             stream->seekg(position);
 
-            for_sequence<2>(
+            for_sequence<EventTypes::size>(
                 [&](auto i) {
                     using EventType = EventTypes::get<i>;
 
