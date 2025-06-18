@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Events/BaseEvent.h"
 #include "Events/Events.h"
 #include "Tables/LookupTable.h"
 #include "Types.h"
@@ -28,11 +27,12 @@ struct EventLUT : public LookupTable<EventLUTEntry> {
     std::vector<EventTypes::variant_t> events {};
 
     EventLUT() = default;
-    EventLUT(istream stream)
-        : LookupTable<EventLUTEntry>(stream)
-    {
-        events.reserve(m_entries.size());
 
+    void deserialize(istream const& stream)
+    {
+        LookupTable<EventLUTEntry>::deserialize(stream);
+
+        events.reserve(m_entries.size());
         stream.consume_padding(4);
         size_t start = stream->tellg();
 
@@ -51,6 +51,11 @@ struct EventLUT : public LookupTable<EventLUTEntry> {
                     events.push_back(std::move(EventType::from(stream)));
                 });
         }
+    }
+
+    void serialize(ostream const& stream) const
+    {
+        LookupTable<EventLUTEntry>::serialize(stream);
     }
 };
 };
