@@ -117,9 +117,9 @@ public:
         stream->read(reinterpret_cast<char*>(this), sizeof(Derived));
     }
 
-    void serialize(std::ostream& stream) const
+    void serialize(ostream const& stream) const
     {
-        stream.write(reinterpret_cast<char*>(this), sizeof(Derived));
+        stream->write(reinterpret_cast<char const*>(this), sizeof(Derived));
     }
 };
 
