@@ -8,7 +8,7 @@
 
 namespace CSTF {
 
-class Header {
+class Header : IStringable<Header> {
     static constexpr auto g_magic_bytes = std::array<u8, 3> { 0xC5, 0x7F, 0x8B };
 
 public:
@@ -39,7 +39,7 @@ public:
         , map_name(map_name)
         , build_info(build_info) { };
 
-    Header(Stream stream)
+    Header(istream stream)
     {
         stream->read(reinterpret_cast<char*>(&cstf_magic), sizeof(cstf_magic));
 
@@ -66,7 +66,7 @@ public:
         return true;
     }
 
-    [[nodiscard]] auto to_string() const -> std::string
+    [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
         return std::format(
             "Header(magic: {:X}{:X}{:X}, flags: {:08B}, reserved: {:04X}, version: {}, tick_rate: {}, map: {}, build_info: {:x})",
