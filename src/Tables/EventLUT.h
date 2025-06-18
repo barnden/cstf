@@ -6,7 +6,7 @@
 
 #include <variant>
 
-namespace CSTF {
+namespace cstf {
 
 #pragma pack(1)
 struct EventLUTEntry : IStringable<EventLUTEntry> {

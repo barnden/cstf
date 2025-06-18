@@ -2,7 +2,7 @@
 
 #include "Types.h"
 
-namespace CSTF {
+namespace cstf {
 
 template <class Derived>
 class Event : public IStringable<Event<Derived>>,

@@ -5,7 +5,7 @@
 #include <cxxabi.h>
 #include <vector>
 
-namespace CSTF {
+namespace cstf {
 
 template <class Entry, class Data, size_t Alignment = 4>
 class LookupTable : IStringable<LookupTable<Entry, Data, Alignment>>,

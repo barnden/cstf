@@ -5,7 +5,7 @@
 #include "PlayerDamageEvent.h"
 #include "PlayerMoveEvent.h"
 
-namespace CSTF {
+namespace cstf {
 
 // Adapted from https://stackoverflow.com/a/62139716
 template <class... T>

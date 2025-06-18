@@ -4,7 +4,7 @@
 #include "Types.h"
 #include <format>
 
-namespace CSTF {
+namespace cstf {
 
 struct PlayerMoveEvent : Event<PlayerMoveEvent> {
     struct Data : public ISerializable<Data> {

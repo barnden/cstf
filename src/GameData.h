@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-namespace CSTF {
+namespace cstf {
 
 struct GameData : IStringable<GameData>, ISerializable<GameData> {
     std::vector<SteamID> players { 10 };
