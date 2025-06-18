@@ -8,16 +8,16 @@
 
 namespace CSTF {
 
-struct GameData {
-    std::vector<u64> players { 10, 0 };
+struct GameData : IStringable<GameData> {
+    std::vector<SteamID> players { 10 };
     std::vector<std::string> usernames { 10 };
     std::array<std::string, 2> team_tags;
     std::array<std::string, 2> team_names;
 
     GameData() = default;
-    GameData(Stream stream)
+    GameData(istream stream)
     {
-        stream.consume_padding<4>();
+        stream.consume_padding(4);
 
         u32 player_count {};
         player_count &= 0xFF;
@@ -44,22 +44,11 @@ struct GameData {
         }
     }
 
-    [[nodiscard]] auto to_string() const -> std::string
+    [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
-        std::string steamids {};
-
-        steamids += "[";
-        for (auto const&& [i, player] : enumerate(players)) {
-            steamids += SteamID(player).to_string();
-
-            if (i != static_cast<int>(players.size()) - 1)
-                steamids += ", ";
-        }
-        steamids += "]";
-
         return std::format(
-            "CSTFGameData(steamids: {}, tags: {}, teams: {}, usernames: {})",
-            steamids,
+            "GameData(steamids: {}, tags: {}, teams: {}, usernames: {})",
+            players,
             team_tags,
             team_names,
             usernames);

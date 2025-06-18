@@ -1,5 +1,6 @@
 #pragma once
 
+#include <print>
 #include <variant>
 #include <vector>
 
@@ -11,7 +12,7 @@
 
 namespace CSTF {
 
-class CSTF {
+class CSTF : IStringable<CSTF> {
     Header m_header;
     GameData m_game_data;
     RoundLUT m_rounds;
@@ -19,13 +20,13 @@ class CSTF {
     std::vector<EventLUT> m_events {};
 
 public:
-    CSTF(Stream stream)
+    CSTF(istream stream)
     {
         m_header = Header(stream);
         m_game_data = GameData(stream);
         m_rounds = RoundLUT(stream);
 
-        stream.consume_padding<RoundLUT::alignment>();
+        stream.consume_padding(RoundLUT::alignment);
         size_t event_base = stream->tellg();
 
         for (auto&& entry : m_rounds.m_entries) {
@@ -39,7 +40,7 @@ public:
         }
     }
 
-    [[nodiscard]] auto to_string() const -> std::string
+    [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
         using std::views::zip;
 
@@ -58,7 +59,6 @@ public:
             auto const& events = m_events[cur_round++];
             for (auto const&& [event, data] : zip(events.m_entries, events.events)) {
                 std::println("\t{}", event);
-
                 std::visit(
                     [](auto const& e) { std::println("\t\t{}", e); },
                     data);

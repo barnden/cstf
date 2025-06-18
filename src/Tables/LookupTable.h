@@ -8,17 +8,15 @@
 namespace CSTF {
 
 template <class Entry, size_t Alignment = 4>
-class LookupTable {
-protected:
-
+class LookupTable : IStringable<LookupTable<Entry, Alignment>> {
 public:
-static constexpr size_t alignment = Alignment;
+    static constexpr size_t alignment = Alignment;
+    std::vector<Entry> m_entries {};
 
-std::vector<Entry> m_entries {};
     LookupTable() = default;
-    LookupTable(Stream stream)
+    LookupTable(istream stream)
     {
-        stream.consume_padding<Alignment>();
+        stream.consume_padding(Alignment);
 
         u32 num_bytes = 0;
         stream->read(reinterpret_cast<char*>(&num_bytes), 4);
@@ -31,7 +29,7 @@ std::vector<Entry> m_entries {};
 
     virtual ~LookupTable() = default;
 
-    [[nodiscard]] virtual auto to_string() const -> std::string
+    [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
         int status {};
 
@@ -40,6 +38,11 @@ std::vector<Entry> m_entries {};
         free(type);
 
         return result;
+    }
+
+    auto entries() const -> std::vector<Entry> const&
+    {
+        return m_entries;
     }
 };
 

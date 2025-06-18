@@ -7,13 +7,13 @@
 namespace CSTF {
 
 #pragma pack(1)
-struct EventLUTEntry {
+struct EventLUTEntry : IStringable<EventLUTEntry> {
     u32 offset : 20 {};
     u32 next : 18 {};
     u8 frames : 4 {};
     u8 type : 6 {};
 
-    [[nodiscard]] auto to_string() const -> std::string
+    [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
         return std::format("EventLUTEntry(type: {:06b}, frames: {}, next: {:04x} offset: {:06x})",
                            type, frames, next, offset);
