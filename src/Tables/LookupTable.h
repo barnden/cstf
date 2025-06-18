@@ -7,16 +7,32 @@
 
 namespace cstf {
 
-template <class Entry, class Data, size_t Alignment = 4>
-class LookupTable : IStringable<LookupTable<Entry, Data, Alignment>>,
-                    public ISerializable<LookupTable<Entry, Data, Alignment>> {
+template <class Derived, class Entry, class Data, size_t Alignment = 4>
+class LookupTable : IStringable<LookupTable<Derived, Entry, Data, Alignment>>,
+                    public ISerializable<LookupTable<Derived, Entry, Data, Alignment>> {
 protected:
     std::vector<Entry> m_entries {};
     std::vector<Data> m_data {};
+    u32 m_offset_size = 4;
+
+    void deserialize_data(
+        istream const& stream,
+        Entry const& entry,
+        size_t base)
+    {
+        size_t position = base + m_offset_size * entry.offset;
+        stream->seekg(position);
+
+        m_data.emplace_back();
+        m_data.back().deserialize(stream);
+    }
+
+    void serialize_data(ostream const& stream, Data const& data) const
+    {
+        data.serialize(stream);
+    }
 
 public:
-    static constexpr size_t alignment = Alignment;
-
     LookupTable() = default;
     virtual ~LookupTable() = default;
 
@@ -31,6 +47,12 @@ public:
         m_entries = std::vector<Entry>(size);
 
         stream->read(reinterpret_cast<char*>(m_entries.data()), num_bytes);
+        stream.consume_padding(Alignment);
+
+        size_t base = stream->tellg();
+        for (auto&& entry : m_entries) {
+            reinterpret_cast<Derived*>(this)->deserialize_data(stream, entry, base);
+        }
     }
 
     void serialize(ostream const& stream) const
@@ -42,6 +64,12 @@ public:
 
         for (auto&& entry : m_entries) {
             stream->write(reinterpret_cast<char const*>(&entry), sizeof(Entry));
+        }
+
+        stream.pad(Alignment);
+
+        for (auto&& data : m_data) {
+            reinterpret_cast<Derived const*>(this)->serialize_data(stream, data);
         }
     }
 

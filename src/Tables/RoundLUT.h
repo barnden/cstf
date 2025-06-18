@@ -28,42 +28,19 @@ struct RoundLUTEntry : IStringable<RoundLUTEntry> {
 
 static_assert(sizeof(RoundLUTEntry) == 6);
 
-struct RoundLUT : public LookupTable<RoundLUTEntry, EventLUT> {
+class RoundLUT : public LookupTable<RoundLUT, RoundLUTEntry, EventLUT> {
+    void deserialize_data(istream const& stream, RoundLUTEntry const& entry, size_t base)
+    {
+        if (entry.type != RoundLUTEntry::ROUND)
+            return;
+
+        LookupTable<RoundLUT, RoundLUTEntry, EventLUT>::deserialize_data(stream, entry, base);
+    }
+
+    friend LookupTable<RoundLUT, RoundLUTEntry, EventLUT>;
+
+public:
     RoundLUT() = default;
-
-    void deserialize(istream const& stream)
-    {
-        LookupTable<RoundLUTEntry, EventLUT>::deserialize(stream);
-
-        m_data.reserve(m_entries.size());
-        stream.consume_padding(4);
-
-        size_t event_base = stream->tellg();
-        for (auto&& entry : m_entries) {
-            // FIXME: We should probably allow events in non-rounds
-            //        e.g. player purchasing a weapon in pause
-            if (entry.type != RoundLUTEntry::Type::ROUND)
-                continue;
-
-            u32 offset = entry.offset;
-            auto position = event_base + 4 * offset;
-
-            stream->seekg(position);
-
-            m_data.emplace_back();
-            m_data.back().deserialize(stream);
-        }
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        LookupTable<RoundLUTEntry, EventLUT>::serialize(stream);
-
-        stream.pad(4);
-        for (auto&& lut : m_data) {
-            lut.serialize(stream);
-        }
-    }
 };
 
 };

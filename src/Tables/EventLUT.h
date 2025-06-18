@@ -25,46 +25,39 @@ struct EventLUTEntry : IStringable<EventLUTEntry> {
 
 static_assert(sizeof(EventLUTEntry) == 6);
 
-struct EventLUT : public LookupTable<EventLUTEntry, EventTypes::variant_t> {
-    EventLUT() = default;
-
-    void deserialize(istream const& stream)
+class EventLUT : public LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t> {
+    void deserialize_data(istream const& stream, EventLUTEntry const& entry, size_t base)
     {
-        LookupTable<EventLUTEntry, EventTypes::variant_t>::deserialize(stream);
+        size_t position = base + m_offset_size * entry.offset;
+        stream->seekg(position);
 
-        m_data.reserve(m_entries.size());
-        stream.consume_padding(4);
+        for_sequence<EventTypes::size>(
+            [&](auto i) {
+                using EventType = EventTypes::get<i>;
 
-        size_t start = stream->tellg();
-        for (auto&& entry : m_entries) {
-            u32 offset = entry.offset;
-            auto position = start + 2 * offset;
+                if (entry.type != i)
+                    return;
 
-            stream->seekg(position);
-
-            for_sequence<EventTypes::size>(
-                [&](auto i) {
-                    using EventType = EventTypes::get<i>;
-
-                    if (entry.type != i)
-                        return;
-
-                    m_data.push_back(std::move(EventType::from(stream)));
-                });
-        }
+                m_data.push_back(std::move(EventType::from(stream)));
+            });
     }
 
-    void serialize(ostream const& stream) const
+    void serialize_data(ostream const& stream, EventTypes::variant_t const& data) const
     {
-        LookupTable<EventLUTEntry, EventTypes::variant_t>::serialize(stream);
-
-        stream.pad(4);
-        for (auto&& data : m_data) {
-            std::visit([&stream](auto const& event) {
+        std::visit(
+            [&stream](auto const& event) {
                 event.serialize(stream);
             },
-                       data);
-        }
+            data);
     }
+
+    friend LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>;
+
+public:
+    EventLUT()
+        : LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>()
+    {
+        m_offset_size = 2;
+    };
 };
 };
