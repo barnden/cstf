@@ -5,7 +5,8 @@
 namespace CSTF {
 
 template <class Derived>
-class Event : public IStringable<Event<Derived>> {
+class Event : public IStringable<Event<Derived>>,
+              public ISerializable<Event<Derived>> {
 public:
     Event() = default;
 
@@ -15,6 +16,18 @@ public:
         instance.data.deserialize(stream);
 
         return instance;
+    }
+
+    void deserialize(istream const& stream)
+    {
+        Derived& self = *static_cast<Derived*>(this);
+        self.data.deserialize(stream);
+    }
+
+    void serialize(ostream const& stream) const
+    {
+        Derived const& self = *static_cast<Derived const*>(this);
+        self.data.serialize(stream);
     }
 };
 

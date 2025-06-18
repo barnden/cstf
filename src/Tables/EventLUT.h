@@ -4,6 +4,8 @@
 #include "Tables/LookupTable.h"
 #include "Types.h"
 
+#include <variant>
+
 namespace CSTF {
 
 #pragma pack(1)
@@ -23,22 +25,21 @@ struct EventLUTEntry : IStringable<EventLUTEntry> {
 
 static_assert(sizeof(EventLUTEntry) == 6);
 
-struct EventLUT : public LookupTable<EventLUTEntry> {
-    std::vector<EventTypes::variant_t> events {};
-
+struct EventLUT : public LookupTable<EventLUTEntry, EventTypes::variant_t> {
     EventLUT() = default;
 
     void deserialize(istream const& stream)
     {
-        LookupTable<EventLUTEntry>::deserialize(stream);
+        LookupTable<EventLUTEntry, EventTypes::variant_t>::deserialize(stream);
 
-        events.reserve(m_entries.size());
+        m_data.reserve(m_entries.size());
         stream.consume_padding(4);
-        size_t start = stream->tellg();
 
+        size_t start = stream->tellg();
         for (auto&& entry : m_entries) {
             u32 offset = entry.offset;
             auto position = start + 2 * offset;
+
             stream->seekg(position);
 
             for_sequence<2>(
@@ -48,14 +49,22 @@ struct EventLUT : public LookupTable<EventLUTEntry> {
                     if (entry.type != i)
                         return;
 
-                    events.push_back(std::move(EventType::from(stream)));
+                    m_data.push_back(std::move(EventType::from(stream)));
                 });
         }
     }
 
     void serialize(ostream const& stream) const
     {
-        LookupTable<EventLUTEntry>::serialize(stream);
+        LookupTable<EventLUTEntry, EventTypes::variant_t>::serialize(stream);
+
+        stream.pad(4);
+        for (auto&& data : m_data) {
+            std::visit([&stream](auto const& event) {
+                event.serialize(stream);
+            },
+                       data);
+        }
     }
 };
 };

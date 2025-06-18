@@ -8,9 +8,15 @@ namespace CSTF {
 
 struct PlayerMoveEvent : Event<PlayerMoveEvent> {
     struct Data : public ISerializable<Data> {
-        // NOTE: Why do we get misalignment when casting char[80] to Data if we
-        //       pack the entire struct and not these fields.
-        //       sizeof(Data) is 20 in either case.
+        /**
+         * NOTE: Why is there a misalignment when casting a char[160] to
+         *       PlayerMoveEvent when we pack the entire struct and not
+         *       when we don't include the float3 in the packing?
+         *
+         *       In both cases sizeof(Data) == 20, so it should act the same.
+         *       Unless there is something about how the spec/compiler that
+         *       I do not understand.
+         */
 #pragma pack(1)
         u8 padding {};
         u32 yaw : 24 {};

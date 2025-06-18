@@ -7,11 +7,12 @@
 
 namespace CSTF {
 
-template <class Entry, size_t Alignment = 4>
-class LookupTable : IStringable<LookupTable<Entry, Alignment>>,
-                    public ISerializable<LookupTable<Entry, Alignment>> {
+template <class Entry, class Data, size_t Alignment = 4>
+class LookupTable : IStringable<LookupTable<Entry, Data, Alignment>>,
+                    public ISerializable<LookupTable<Entry, Data, Alignment>> {
 protected:
     std::vector<Entry> m_entries {};
+    std::vector<Data> m_data {};
 
 public:
     static constexpr size_t alignment = Alignment;
@@ -58,6 +59,11 @@ public:
     auto entries() const -> std::vector<Entry> const&
     {
         return m_entries;
+    }
+
+    auto data() const -> std::vector<Data> const&
+    {
+        return m_data;
     }
 
     virtual void add(Entry& entry)
