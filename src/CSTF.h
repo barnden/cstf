@@ -10,7 +10,7 @@
 #include "Tables/RoundLUT.h"
 #include "Types.h"
 
-namespace CSTF {
+namespace cstf {
 
 class CSTF : public IStringable<CSTF>, public ISerializable<CSTF> {
     Header m_header {};

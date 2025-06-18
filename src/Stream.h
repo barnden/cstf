@@ -2,7 +2,7 @@
 
 #include <fstream>
 
-namespace CSTF {
+namespace cstf {
 
 class istream {
     std::istream& m_stream;

@@ -4,7 +4,7 @@
 #include "Tables/LookupTable.h"
 #include "Types.h"
 
-namespace CSTF {
+namespace cstf {
 
 #pragma pack(1)
 struct RoundLUTEntry : IStringable<RoundLUTEntry> {

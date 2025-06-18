@@ -5,7 +5,7 @@
 #include <ranges>
 #include <string>
 
-namespace CSTF {
+namespace cstf {
 
 class Header : IStringable<Header>, public ISerializable<Header> {
     static constexpr auto g_magic_bytes = std::array<u8, 3> { 0xC5, 0x7F, 0x8B };

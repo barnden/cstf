@@ -4,7 +4,7 @@
 #include "Types.h"
 #include <format>
 
-namespace CSTF {
+namespace cstf {
 
 struct PlayerDamageEvent : Event<PlayerDamageEvent> {
 #pragma pack(1)
