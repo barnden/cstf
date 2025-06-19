@@ -2,13 +2,16 @@
 
 #include "BaseEvent.h"
 #include "Types.h"
+#include <Serializable.h>
 #include <format>
 
 namespace cstf {
 
+using serialize::Serializable;
+
 struct PlayerDamageEvent : Event<PlayerDamageEvent> {
 #pragma pack(1)
-    struct Data : public ISerializable<Data> {
+    struct Data : public Serializable<Data> {
         u8 padding {};
         u8 source {};
         u8 armor {};

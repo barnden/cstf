@@ -3,11 +3,15 @@
 #include "Tables/EventLUT.h"
 #include "Tables/LookupTable.h"
 #include "Types.h"
+#include <Serializable.h>
 
 namespace cstf {
 
+using namespace serialize;
+
 #pragma pack(1)
-struct RoundLUTEntry : IStringable<RoundLUTEntry> {
+struct RoundLUTEntry : IStringable<RoundLUTEntry>,
+                       public Serializable<RoundLUTEntry> {
     u32 offset : 24 {};
     u32 frame_offset : 22 {};
 
@@ -29,18 +33,41 @@ struct RoundLUTEntry : IStringable<RoundLUTEntry> {
 static_assert(sizeof(RoundLUTEntry) == 6);
 
 class RoundLUT : public LookupTable<RoundLUT, RoundLUTEntry, EventLUT> {
-    void deserialize_data(istream const& stream, RoundLUTEntry const& entry, size_t base)
-    {
-        if (entry.type != RoundLUTEntry::ROUND)
-            return;
-
-        LookupTable<RoundLUT, RoundLUTEntry, EventLUT>::deserialize_data(stream, entry, base);
-    }
-
     friend LookupTable<RoundLUT, RoundLUTEntry, EventLUT>;
+    friend Deserializer<RoundLUT>;
 
 public:
     RoundLUT() = default;
+};
+
+namespace serialize {
+    template <>
+    struct Serializer<RoundLUT> : Serializer<LookupTable<RoundLUT, RoundLUTEntry, EventLUT>> {
+        void visit(RoundLUT&) const { ASSERT_NOT_REACHED; }
+
+        void visit(RoundLUT const&, RoundLUTEntry const&, auto const& data) const
+        {
+            data.accept(to<BaseSerializer>());
+        }
+    };
+
+    template <>
+    struct Deserializer<RoundLUT> : Deserializer<LookupTable<RoundLUT, RoundLUTEntry, EventLUT>> {
+        void visit(RoundLUT&) const { ASSERT_NOT_REACHED; }
+
+        void visit(RoundLUT& lut, RoundLUTEntry entry, size_t base) const
+        {
+            // FIXME: We should allow for events in pauses, e.g. player purchase/join/etc
+            if (entry.type != RoundLUTEntry::Type::ROUND)
+                return;
+
+            size_t position = base + lut.m_offset_size * entry.offset;
+            m_stream->seekg(position);
+
+            lut.m_data.emplace_back();
+            lut.m_data.back().accept(to<BaseDeserializer>());
+        }
+    };
 };
 
 };

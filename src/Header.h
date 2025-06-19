@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Serializable.h"
 #include "Types.h"
 
 #include <ranges>
@@ -7,7 +8,9 @@
 
 namespace cstf {
 
-class Header : IStringable<Header>, public ISerializable<Header> {
+using serialize::Serializable;
+
+class Header : IStringable<Header>, public Serializable<Header> {
     static constexpr auto g_magic_bytes = std::array<u8, 3> { 0xC5, 0x7F, 0x8B };
 
 public:
@@ -21,12 +24,12 @@ public:
     };
 
     std::array<u8, 3> cstf_magic {};
-    u8 flags = 0;
-    u16 reserved = 0;
-    u8 version = 0;
-    u8 tick_rate = 0;
+    u8 flags {};
+    u16 reserved {};
+    u8 version {};
+    u8 tick_rate {};
     std::string map_name {};
-    u32 build_info = 0;
+    u32 build_info {};
 
     Header() = default;
 
@@ -37,36 +40,6 @@ public:
         , tick_rate(tick_rate)
         , map_name(map_name)
         , build_info(build_info) { };
-
-    void deserialize(istream const& stream)
-    {
-        stream->read(reinterpret_cast<char*>(&cstf_magic), sizeof(cstf_magic));
-
-        stream >> flags;
-
-        stream->read(reinterpret_cast<char*>(&reserved), 2);
-
-        stream >> version >> tick_rate;
-
-        std::getline(*stream, map_name, '\0');
-
-        stream->read(reinterpret_cast<char*>(&build_info), 4);
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        stream->write(reinterpret_cast<char const*>(&cstf_magic), sizeof(cstf_magic));
-
-        stream << flags;
-
-        stream->write(reinterpret_cast<char const*>(&reserved), 2);
-
-        stream << version << tick_rate;
-
-        stream->write(map_name.c_str(), map_name.size() + 1);
-
-        stream->write(reinterpret_cast<char const*>(&build_info), 4);
-    }
 
     [[nodiscard]] constexpr auto is_valid() const noexcept -> bool
     {
@@ -88,5 +61,43 @@ public:
             static_cast<int>(tick_rate), map_name, build_info);
     }
 };
+
+namespace serialize {
+    template <>
+    struct Serializer<Header> : BaseSerializer {
+        void visit(Header const& header) const
+        {
+            m_stream->write(reinterpret_cast<char const*>(&header.cstf_magic), sizeof(header.cstf_magic));
+
+            m_stream << header.flags;
+
+            m_stream->write(reinterpret_cast<char const*>(&header.reserved), 2);
+
+            m_stream << header.version << header.tick_rate;
+
+            m_stream->write(header.map_name.c_str(), header.map_name.size() + 1);
+
+            m_stream->write(reinterpret_cast<char const*>(&header.build_info), 4);
+        }
+    };
+
+    template <>
+    struct Deserializer<Header> : public BaseDeserializer {
+        void visit(Header& header) const
+        {
+            m_stream->read(reinterpret_cast<char*>(&header.cstf_magic), sizeof(header.cstf_magic));
+
+            m_stream >> header.flags;
+
+            m_stream->read(reinterpret_cast<char*>(&header.reserved), 2);
+
+            m_stream >> header.version >> header.tick_rate;
+
+            std::getline(*m_stream, header.map_name, '\0');
+
+            m_stream->read(reinterpret_cast<char*>(&header.build_info), 4);
+        }
+    };
+}
 
 };
