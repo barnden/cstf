@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Serializable.h"
 #include "Types.h"
 
 #include <cxxabi.h>
@@ -7,9 +8,11 @@
 
 namespace cstf {
 
+using serialize::Serializable;
+
 template <class Derived, class Entry, class Data, size_t Alignment = 4>
 class LookupTable : IStringable<LookupTable<Derived, Entry, Data, Alignment>>,
-                    public ISerializable<LookupTable<Derived, Entry, Data, Alignment>> {
+                    public Serializable<LookupTable<Derived, Entry, Data, Alignment>> {
 protected:
     std::vector<Entry> m_entries {};
     std::vector<Data> m_data {};
@@ -33,45 +36,13 @@ protected:
     }
 
 public:
+    using derived_type = Derived;
+    using entry_type = Entry;
+    using data_type = Data;
+    static constexpr size_t alignment = Alignment;
+
     LookupTable() = default;
     virtual ~LookupTable() = default;
-
-    void deserialize(istream const& stream)
-    {
-        stream.consume_padding(Alignment);
-
-        u32 num_bytes = 0;
-        stream->read(reinterpret_cast<char*>(&num_bytes), 4);
-
-        auto size = num_bytes / sizeof(Entry);
-        m_entries = std::vector<Entry>(size);
-
-        stream->read(reinterpret_cast<char*>(m_entries.data()), num_bytes);
-        stream.consume_padding(Alignment);
-
-        size_t base = stream->tellg();
-        for (auto&& entry : m_entries) {
-            reinterpret_cast<Derived*>(this)->deserialize_data(stream, entry, base);
-        }
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        stream.pad(Alignment);
-
-        u32 num_bytes = m_entries.size() * sizeof(Entry);
-        stream->write(reinterpret_cast<char const*>(&num_bytes), 4);
-
-        for (auto&& entry : m_entries) {
-            stream->write(reinterpret_cast<char const*>(&entry), sizeof(Entry));
-        }
-
-        stream.pad(Alignment);
-
-        for (auto&& data : m_data) {
-            reinterpret_cast<Derived const*>(this)->serialize_data(stream, data);
-        }
-    }
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
@@ -99,5 +70,47 @@ public:
         m_entries.push_back(entry);
     }
 };
+
+namespace serialize {
+
+    // template <class Derived, class Entry, class Data, size_t Alignment>
+    // void Deserializer::visit<LookupTable<Derived, Entry, Data, Alignment>>(LookupTable<Derived, Entry, Data, Alignment>& stream) const
+    // {
+    //     stream.consume_padding(Alignment);
+
+    //     u32 num_bytes = 0;
+    //     stream->read(reinterpret_cast<char*>(&num_bytes), 4);
+
+    //     auto size = num_bytes / sizeof(Entry);
+    //     m_entries = std::vector<Entry>(size);
+
+    //     stream->read(reinterpret_cast<char*>(m_entries.data()), num_bytes);
+    //     stream.consume_padding(Alignment);
+
+    //     size_t base = stream->tellg();
+    //     for (auto&& entry : m_entries) {
+    //         reinterpret_cast<Derived*>(this)->deserialize_data(stream, entry, base);
+    //     }
+    // }
+
+    // template <typename A, typename B, typename C, size_t Alignment>
+    // void Serializer::visit<LookupTable<A, B, C, Alignment>>(auto const& stream) const
+    // {
+    //     stream.pad(Alignment);
+
+    //     u32 num_bytes = m_entries.size() * sizeof(Entry);
+    //     stream->write(reinterpret_cast<char const*>(&num_bytes), 4);
+
+    //     for (auto&& entry : m_entries) {
+    //         stream->write(reinterpret_cast<char const*>(&entry), sizeof(Entry));
+    //     }
+
+    //     stream.pad(Alignment);
+
+    //     for (auto&& data : m_data) {
+    //         reinterpret_cast<Derived const*>(this)->serialize_data(stream, data);
+    //     }
+    // }
+}
 
 };

@@ -109,18 +109,4 @@ struct float3 {
     float z;
 };
 
-template <typename Derived>
-class ISerializable {
-public:
-    void deserialize(istream const& stream)
-    {
-        stream->read(reinterpret_cast<char*>(this), sizeof(Derived));
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        stream->write(reinterpret_cast<char const*>(this), sizeof(Derived));
-    }
-};
-
 };

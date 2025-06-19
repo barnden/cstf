@@ -6,13 +6,16 @@
 
 #include "GameData.h"
 #include "Header.h"
+#include "Serializable.h"
 #include "Tables/EventLUT.h"
 #include "Tables/RoundLUT.h"
 #include "Types.h"
 
 namespace cstf {
 
-class CSTF : public IStringable<CSTF>, public ISerializable<CSTF> {
+using serialize::Serializable;
+
+class CSTF : public IStringable<CSTF>, public Serializable<CSTF> {
     Header m_header {};
     GameData m_game_data {};
     RoundLUT m_rounds {};
@@ -20,18 +23,11 @@ class CSTF : public IStringable<CSTF>, public ISerializable<CSTF> {
 public:
     CSTF() = default;
 
-    void deserialize(istream const& stream)
+    void accept(serialize::Serializer const& serializer) const
     {
-        m_header.deserialize(stream);
-        m_game_data.deserialize(stream);
-        m_rounds.deserialize(stream);
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        m_header.serialize(stream);
-        m_game_data.serialize(stream);
-        m_rounds.serialize(stream);
+        serializer.visit(m_header);
+        serializer.visit(m_game_data);
+        serializer.visit(m_rounds);
     }
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
@@ -63,4 +59,4 @@ public:
     }
 };
 
-};
+}
