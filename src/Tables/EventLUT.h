@@ -4,12 +4,15 @@
 #include "Tables/LookupTable.h"
 #include "Types.h"
 
-#include <variant>
+#include <Serializable.h>
 
 namespace cstf {
 
+using namespace serialize;
+
 #pragma pack(1)
-struct EventLUTEntry : IStringable<EventLUTEntry> {
+struct EventLUTEntry : public IStringable<EventLUTEntry>,
+                       public Serializable<EventLUTEntry> {
     u32 offset : 20 {};
     u32 next : 18 {};
     u8 frames : 4 {};
@@ -26,32 +29,8 @@ struct EventLUTEntry : IStringable<EventLUTEntry> {
 static_assert(sizeof(EventLUTEntry) == 6);
 
 class EventLUT : public LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t> {
-    void deserialize_data(istream const& stream, EventLUTEntry const& entry, size_t base)
-    {
-        size_t position = base + m_offset_size * entry.offset;
-        stream->seekg(position);
-
-        for_sequence<EventTypes::size>(
-            [&](auto i) {
-                using EventType = EventTypes::get<i>;
-
-                if (entry.type != i)
-                    return;
-
-                m_data.push_back(std::move(EventType::from(stream)));
-            });
-    }
-
-    void serialize_data(ostream const& stream, EventTypes::variant_t const& data) const
-    {
-        std::visit(
-            [&stream](auto const& event) {
-                event.serialize(stream);
-            },
-            data);
-    }
-
     friend LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>;
+    friend Deserializer<EventLUT>;
 
 public:
     EventLUT()
@@ -60,4 +39,44 @@ public:
         m_offset_size = 2;
     };
 };
+
+namespace serialize {
+    template <>
+    struct Serializer<EventLUT> : Serializer<LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>> {
+        void visit(EventLUT const&) const { ASSERT_NOT_REACHED; }
+
+        void visit(EventLUT const&, EventLUTEntry const&, auto const& data) const
+        {
+            std::visit(
+                [&](auto const& event) {
+                    event.accept(to<BaseSerializer>());
+                },
+                data);
+        }
+    };
+
+    template <>
+    struct Deserializer<EventLUT> : Deserializer<LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>> {
+        void visit(EventLUT&) const { ASSERT_NOT_REACHED; }
+
+        void visit(EventLUT& lut, EventLUTEntry entry, size_t base) const
+        {
+            size_t position = base + lut.m_offset_size * entry.offset;
+            m_stream->seekg(position);
+
+            for_sequence<EventTypes::size>(
+                [&](auto i) {
+                    using EventType = EventTypes::get<i>;
+
+                    if (entry.type != i)
+                        return;
+
+                    EventType event {};
+                    event.accept(to<BaseDeserializer>());
+                    lut.m_data.push_back(event);
+                });
+        }
+    };
+};
+
 };

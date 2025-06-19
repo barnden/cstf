@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Serializable.h"
 #include "Types.h"
 
 #include <string>
@@ -7,66 +8,19 @@
 
 namespace cstf {
 
-struct GameData : IStringable<GameData>, ISerializable<GameData> {
+using serialize::Serializable;
+
+class GameData : IStringable<GameData>, public Serializable<GameData> {
     std::vector<SteamID> players { 10 };
     std::vector<std::string> usernames { 10 };
     std::array<std::string, 2> team_tags;
     std::array<std::string, 2> team_names;
 
+    friend serialize::Serializer<GameData>;
+    friend serialize::Deserializer<GameData>;
+
+public:
     GameData() = default;
-
-    void deserialize(istream const& stream)
-    {
-        stream.consume_padding(4);
-
-        u32 player_count {};
-        player_count &= 0xFF;
-
-        stream->read(reinterpret_cast<char*>(&player_count), 4);
-
-        players.resize(player_count);
-        usernames.resize(player_count);
-
-        for (auto&& player : players) {
-            stream->read(reinterpret_cast<char*>(&player), 8);
-        }
-
-        for (auto&& username : usernames) {
-            std::getline(*stream, username, '\0');
-        }
-
-        for (auto&& tag : team_tags) {
-            std::getline(*stream, tag, '\0');
-        }
-
-        for (auto&& name : team_names) {
-            std::getline(*stream, name, '\0');
-        }
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        stream.pad(4);
-
-        u32 player_count = players.size();
-        stream->write(reinterpret_cast<char const*>(&player_count), 4);
-
-        for (auto&& player : players) {
-            stream->write(reinterpret_cast<char const*>(&player), 8);
-        }
-
-        for (auto&& username : usernames) {
-            stream->write(username.c_str(), username.size() + 1);
-        }
-
-        for (auto&& tag : team_tags) {
-            stream->write(tag.c_str(), tag.size() + 1);
-        }
-
-        for (auto&& name : team_names) {
-            stream->write(name.c_str(), name.size() + 1);
-        }
-    }
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
@@ -78,5 +32,66 @@ struct GameData : IStringable<GameData>, ISerializable<GameData> {
             usernames);
     }
 };
+
+namespace serialize {
+    template <>
+    struct Serializer<GameData> : BaseSerializer {
+        void visit(GameData const& game) const
+        {
+            m_stream.pad(4);
+
+            u32 player_count = game.players.size();
+            m_stream->write(reinterpret_cast<char const*>(&player_count), 4);
+
+            for (auto&& player : game.players) {
+                m_stream->write(reinterpret_cast<char const*>(&player), 8);
+            }
+
+            for (auto&& username : game.usernames) {
+                m_stream->write(username.c_str(), username.size() + 1);
+            }
+
+            for (auto&& tag : game.team_tags) {
+                m_stream->write(tag.c_str(), tag.size() + 1);
+            }
+
+            for (auto&& name : game.team_names) {
+                m_stream->write(name.c_str(), name.size() + 1);
+            }
+        }
+    };
+
+    template <>
+    struct Deserializer<GameData> : BaseDeserializer {
+        void visit(GameData& game) const
+        {
+            m_stream.consume_padding(4);
+
+            u32 player_count {};
+            player_count &= 0xFF;
+
+            m_stream->read(reinterpret_cast<char*>(&player_count), 4);
+
+            game.players.resize(player_count);
+            game.usernames.resize(player_count);
+
+            for (auto&& player : game.players) {
+                m_stream->read(reinterpret_cast<char*>(&player), 8);
+            }
+
+            for (auto&& username : game.usernames) {
+                std::getline(*m_stream, username, '\0');
+            }
+
+            for (auto&& tag : game.team_tags) {
+                std::getline(*m_stream, tag, '\0');
+            }
+
+            for (auto&& name : game.team_names) {
+                std::getline(*m_stream, name, '\0');
+            }
+        }
+    };
+}
 
 };

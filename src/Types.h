@@ -8,6 +8,12 @@
 
 #include "Stream.h"
 
+#if _MSC_VER && !__INTEL_COMPILER
+#    define ASSERT_NOT_REACHED __assume(false);
+#else
+#    define ASSERT_NOT_REACHED __builtin_unreachable();
+#endif
+
 // Copied from https://www.reddit.com/r/cpp/comments/l37uui/comment/gkdag33/
 template <typename T, T... S, typename F>
 constexpr void for_sequence(std::integer_sequence<T, S...>, F f)
@@ -107,20 +113,6 @@ struct float3 {
     float x;
     float y;
     float z;
-};
-
-template <typename Derived>
-class ISerializable {
-public:
-    void deserialize(istream const& stream)
-    {
-        stream->read(reinterpret_cast<char*>(this), sizeof(Derived));
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        stream->write(reinterpret_cast<char const*>(this), sizeof(Derived));
-    }
 };
 
 };
