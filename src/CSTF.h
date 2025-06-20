@@ -13,7 +13,7 @@
 
 namespace cstf {
 
-using serialize::Serializable;
+using namespace cstf::serialize;
 
 class CSTF : public IStringable<CSTF>, public Serializable<CSTF> {
     Header m_header {};
@@ -22,13 +22,6 @@ class CSTF : public IStringable<CSTF>, public Serializable<CSTF> {
 
 public:
     CSTF() = default;
-
-    void accept(serialize::Serializer const& serializer) const
-    {
-        serializer.visit(m_header);
-        serializer.visit(m_game_data);
-        serializer.visit(m_rounds);
-    }
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
@@ -56,6 +49,13 @@ public:
         }
 
         return result;
+    }
+
+    void accept(auto const& visitor)
+    {
+        m_header.accept(visitor);
+        m_game_data.accept(visitor);
+        m_rounds.accept(visitor);
     }
 };
 

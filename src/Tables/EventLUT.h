@@ -4,12 +4,13 @@
 #include "Tables/LookupTable.h"
 #include "Types.h"
 
-#include <variant>
+#include <Serializable.h>
 
 namespace cstf {
 
 #pragma pack(1)
-struct EventLUTEntry : IStringable<EventLUTEntry> {
+struct EventLUTEntry : public IStringable<EventLUTEntry>,
+                       public Serializable<EventLUTEntry> {
     u32 offset : 20 {};
     u32 next : 18 {};
     u8 frames : 4 {};
@@ -26,30 +27,15 @@ struct EventLUTEntry : IStringable<EventLUTEntry> {
 static_assert(sizeof(EventLUTEntry) == 6);
 
 class EventLUT : public LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t> {
-    void deserialize_data(istream const& stream, EventLUTEntry const& entry, size_t base)
-    {
-        size_t position = base + m_offset_size * entry.offset;
-        stream->seekg(position);
 
-        for_sequence<EventTypes::size>(
-            [&](auto i) {
-                using EventType = EventTypes::get<i>;
-
-                if (entry.type != i)
-                    return;
-
-                m_data.push_back(std::move(EventType::from(stream)));
-            });
-    }
-
-    void serialize_data(ostream const& stream, EventTypes::variant_t const& data) const
-    {
-        std::visit(
-            [&stream](auto const& event) {
-                event.serialize(stream);
-            },
-            data);
-    }
+    // void serialize_data(ostream const& stream, EventTypes::variant_t const& data) const
+    // {
+    //     std::visit(
+    //         [&stream](auto const& event) {
+    //             event.serialize(stream);
+    //         },
+    //         data);
+    // }
 
     friend LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>;
 
@@ -59,5 +45,28 @@ public:
     {
         m_offset_size = 2;
     };
+
+    void accept(BaseDeserializer const& visitor)
+    {
+        LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>::accept(visitor);
+    }
+
+    void accept(BaseDeserializer const& visitor, EventLUTEntry entry, size_t base)
+    {
+        size_t position = base + m_offset_size * entry.offset;
+        visitor.stream()->seekg(position);
+
+        for_sequence<EventTypes::size>(
+            [&](auto i) {
+                using EventType = EventTypes::get<i>;
+
+                if (entry.type != i)
+                    return;
+
+                EventType event {};
+                event.accept(visitor);
+                m_data.push_back(event);
+            });
+    }
 };
 };

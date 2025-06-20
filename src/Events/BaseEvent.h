@@ -1,34 +1,44 @@
 #pragma once
 
+#include "Serializable.h"
 #include "Types.h"
 
 namespace cstf {
 
+using serialize::Serializable, serialize::Deserializer;
+
 template <class Derived>
 class Event : public IStringable<Event<Derived>>,
-              public ISerializable<Event<Derived>> {
+              public Serializable<Event<Derived>> {
 public:
     Event() = default;
 
-    static auto from(istream const& stream) -> Derived
+    static auto from(Deserializer<Derived> const& deserializer) -> Derived
     {
         auto instance = Derived {};
-        instance.data.deserialize(stream);
+        deserializer.visit(instance);
 
         return instance;
     }
-
-    void deserialize(istream const& stream)
-    {
-        Derived& self = *static_cast<Derived*>(this);
-        self.data.deserialize(stream);
-    }
-
-    void serialize(ostream const& stream) const
-    {
-        Derived const& self = *static_cast<Derived const*>(this);
-        self.data.serialize(stream);
-    }
 };
+
+namespace serialize {
+
+    template <class Derived>
+    struct Serializer<Event<Derived>> : BaseSerializer {
+        void visit(Event<Derived> const& event) const
+        {
+            static_cast<Derived const&>(event).data.accept(to<BaseSerializer>());
+        }
+    };
+
+    template <class Derived>
+    struct Deserializer<Event<Derived>> : BaseDeserializer {
+        void visit(Event<Derived>& event) const
+        {
+            static_cast<Derived&>(event).data.accept(to<BaseSerializer>());
+        }
+    };
+}
 
 };

@@ -4,36 +4,41 @@
 #include "Types.h"
 
 #include <cxxabi.h>
+#include <print>
 #include <vector>
 
 namespace cstf {
 
-using serialize::Serializable;
+using namespace serialize;
 
 template <class Derived, class Entry, class Data, size_t Alignment = 4>
 class LookupTable : IStringable<LookupTable<Derived, Entry, Data, Alignment>>,
                     public Serializable<LookupTable<Derived, Entry, Data, Alignment>> {
+
+    friend Serializer<LookupTable<Derived, Entry, Data, Alignment>>;
+    friend Deserializer<LookupTable<Derived, Entry, Data, Alignment>>;
+
 protected:
     std::vector<Entry> m_entries {};
     std::vector<Data> m_data {};
     u32 m_offset_size = 4;
 
-    void deserialize_data(
-        istream const& stream,
-        Entry const& entry,
-        size_t base)
-    {
-        size_t position = base + m_offset_size * entry.offset;
-        stream->seekg(position);
+    // void accept(
+    //     BaseDeserializer const& deserializer,
+    //     Entry const& entry,
+    //     size_t base)
+    // {
+    //     size_t position = base + m_offset_size * entry.offset;
+    //     deserializer.m_stream->seekg(position);
 
-        m_data.emplace_back();
-        m_data.back().deserialize(stream);
-    }
+    //     m_data.emplace_back();
+    //     m_data.back().accept(deserializer);
+    // }
 
-    void serialize_data(ostream const& stream, Data const& data) const
-    {
-        data.serialize(stream);
-    }
+    // void serialize_data(ostream const& stream, Data const& data) const
+    // {
+    //     data.serialize(stream);
+    // }
 
 public:
     using derived_type = Derived;
@@ -72,45 +77,53 @@ public:
 };
 
 namespace serialize {
+    template <class Derived, class Entry, class Data, size_t Alignment>
+    struct Serializer<LookupTable<Derived, Entry, Data, Alignment>> : BaseSerializer {
+        void visit(LookupTable<Derived, Entry, Data, Alignment> const& lut) const
+        {
+            m_stream.pad(Alignment);
 
-    // template <class Derived, class Entry, class Data, size_t Alignment>
-    // void Deserializer::visit<LookupTable<Derived, Entry, Data, Alignment>>(LookupTable<Derived, Entry, Data, Alignment>& stream) const
-    // {
-    //     stream.consume_padding(Alignment);
+            u32 num_bytes = lut.m_entries.size() * sizeof(Entry);
+            m_stream->write(reinterpret_cast<char const*>(&num_bytes), 4);
 
-    //     u32 num_bytes = 0;
-    //     stream->read(reinterpret_cast<char*>(&num_bytes), 4);
+            for (auto&& entry : lut.m_entries) {
+                m_stream->write(reinterpret_cast<char const*>(&entry), sizeof(Entry));
+            }
 
-    //     auto size = num_bytes / sizeof(Entry);
-    //     m_entries = std::vector<Entry>(size);
+            m_stream.pad(Alignment);
 
-    //     stream->read(reinterpret_cast<char*>(m_entries.data()), num_bytes);
-    //     stream.consume_padding(Alignment);
+            for (auto const&& data : lut.m_data) {
+                data.accept(to<BaseSerializer>());
+                static_cast<Derived&>(lut).accept(to<BaseSerializer>());
+            }
+        }
+    };
 
-    //     size_t base = stream->tellg();
-    //     for (auto&& entry : m_entries) {
-    //         reinterpret_cast<Derived*>(this)->deserialize_data(stream, entry, base);
-    //     }
-    // }
+    template <class Derived, class Entry, class Data, size_t Alignment>
+    struct Deserializer<LookupTable<Derived, Entry, Data, Alignment>> : BaseDeserializer {
+        void visit(LookupTable<Derived, Entry, Data, Alignment>& lut) const
+        {
+            m_stream.consume_padding(Alignment);
 
-    // template <typename A, typename B, typename C, size_t Alignment>
-    // void Serializer::visit<LookupTable<A, B, C, Alignment>>(auto const& stream) const
-    // {
-    //     stream.pad(Alignment);
+            u32 num_bytes = 0;
+            m_stream->read(reinterpret_cast<char*>(&num_bytes), 4);
 
-    //     u32 num_bytes = m_entries.size() * sizeof(Entry);
-    //     stream->write(reinterpret_cast<char const*>(&num_bytes), 4);
+            auto size = num_bytes / sizeof(Entry);
+            lut.m_entries = std::vector<Entry>(size);
 
-    //     for (auto&& entry : m_entries) {
-    //         stream->write(reinterpret_cast<char const*>(&entry), sizeof(Entry));
-    //     }
+            for (auto&& entry : lut.m_entries) {
+                entry.accept(to<Entry>());
+            }
 
-    //     stream.pad(Alignment);
+            m_stream.consume_padding(Alignment);
 
-    //     for (auto&& data : m_data) {
-    //         reinterpret_cast<Derived const*>(this)->serialize_data(stream, data);
-    //     }
-    // }
+            size_t base = m_stream->tellg();
+            for (auto&& entry : lut.m_entries) {
+                static_cast<Derived&>(lut).accept(to<BaseDeserializer>(), entry, base);
+            }
+        }
+    };
+
 }
 
 };

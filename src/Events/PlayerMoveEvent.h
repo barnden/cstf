@@ -2,12 +2,15 @@
 
 #include "BaseEvent.h"
 #include "Types.h"
+#include <Serializable.h>
 #include <format>
 
 namespace cstf {
 
+using serialize::Serializable;
+
 struct PlayerMoveEvent : Event<PlayerMoveEvent> {
-    struct Data : public ISerializable<Data> {
+    struct Data : public Serializable<PlayerMoveEvent> {
         /**
          * NOTE: Why is there a misalignment when casting a char[160] to
          *       PlayerMoveEvent when we pack the entire struct and not

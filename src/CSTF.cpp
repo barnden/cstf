@@ -1,8 +1,12 @@
 #include "CSTF.h"
+#include <GameData.h>
+#include <Serializable.h>
 #include <fstream>
+#include <print>
 #include <string>
 
 using namespace cstf;
+using namespace cstf::serialize;
 
 auto main(int argc, char** argv) -> int
 {
@@ -20,25 +24,27 @@ auto main(int argc, char** argv) -> int
     CSTF cstf {};
     {
         auto file = std::ifstream(cstf_read_path, std::ios::binary);
+        BaseDeserializer deserializer(file);
 
         if (!file.is_open()) {
             std::println("Failed to open \"{}\" for reading.", cstf_read_path);
             exit(0);
         }
 
-        cstf.deserialize(file);
+        cstf.accept(deserializer);
 
         std::println("{}", cstf);
     }
 
     {
         auto file = std::ofstream(cstf_write_path, std::ios::binary);
+        BaseSerializer serializer(file);
 
         if (!file.is_open()) {
             std::println("Failed to open \"{}\" for writing.", cstf_read_path);
             exit(0);
         }
 
-        cstf.serialize(file);
+        cstf.accept(serializer);
     }
 }

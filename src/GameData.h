@@ -16,8 +16,8 @@ class GameData : IStringable<GameData>, public Serializable<GameData> {
     std::array<std::string, 2> team_tags;
     std::array<std::string, 2> team_names;
 
-    friend serialize::Serializer;
-    friend serialize::Deserializer;
+    friend serialize::Serializer<GameData>;
+    friend serialize::Deserializer<GameData>;
 
 public:
     GameData() = default;
@@ -35,59 +35,63 @@ public:
 
 namespace serialize {
     template <>
-    void Serializer::visit<GameData>(auto const& game) const
-    {
-        m_stream.pad(4);
+    struct Serializer<GameData> : BaseSerializer {
+        void visit(GameData const& game) const
+        {
+            m_stream.pad(4);
 
-        u32 player_count = game.players.size();
-        m_stream->write(reinterpret_cast<char const*>(&player_count), 4);
+            u32 player_count = game.players.size();
+            m_stream->write(reinterpret_cast<char const*>(&player_count), 4);
 
-        for (auto&& player : game.players) {
-            m_stream->write(reinterpret_cast<char const*>(&player), 8);
+            for (auto&& player : game.players) {
+                m_stream->write(reinterpret_cast<char const*>(&player), 8);
+            }
+
+            for (auto&& username : game.usernames) {
+                m_stream->write(username.c_str(), username.size() + 1);
+            }
+
+            for (auto&& tag : game.team_tags) {
+                m_stream->write(tag.c_str(), tag.size() + 1);
+            }
+
+            for (auto&& name : game.team_names) {
+                m_stream->write(name.c_str(), name.size() + 1);
+            }
         }
-
-        for (auto&& username : game.usernames) {
-            m_stream->write(username.c_str(), username.size() + 1);
-        }
-
-        for (auto&& tag : game.team_tags) {
-            m_stream->write(tag.c_str(), tag.size() + 1);
-        }
-
-        for (auto&& name : game.team_names) {
-            m_stream->write(name.c_str(), name.size() + 1);
-        }
-    }
+    };
 
     template <>
-    void Deserializer::visit<GameData>(auto& game) const
-    {
-        m_stream.consume_padding(4);
+    struct Deserializer<GameData> : BaseDeserializer {
+        void visit(GameData& game) const
+        {
+            m_stream.consume_padding(4);
 
-        u32 player_count {};
-        player_count &= 0xFF;
+            u32 player_count {};
+            player_count &= 0xFF;
 
-        m_stream->read(reinterpret_cast<char*>(&player_count), 4);
+            m_stream->read(reinterpret_cast<char*>(&player_count), 4);
 
-        game.players.resize(player_count);
-        game.usernames.resize(player_count);
+            game.players.resize(player_count);
+            game.usernames.resize(player_count);
 
-        for (auto&& player : game.players) {
-            m_stream->read(reinterpret_cast<char*>(&player), 8);
+            for (auto&& player : game.players) {
+                m_stream->read(reinterpret_cast<char*>(&player), 8);
+            }
+
+            for (auto&& username : game.usernames) {
+                std::getline(*m_stream, username, '\0');
+            }
+
+            for (auto&& tag : game.team_tags) {
+                std::getline(*m_stream, tag, '\0');
+            }
+
+            for (auto&& name : game.team_names) {
+                std::getline(*m_stream, name, '\0');
+            }
         }
-
-        for (auto&& username : game.usernames) {
-            std::getline(*m_stream, username, '\0');
-        }
-
-        for (auto&& tag : game.team_tags) {
-            std::getline(*m_stream, tag, '\0');
-        }
-
-        for (auto&& name : game.team_names) {
-            std::getline(*m_stream, name, '\0');
-        }
-    }
+    };
 }
 
 };

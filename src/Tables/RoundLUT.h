@@ -3,11 +3,15 @@
 #include "Tables/EventLUT.h"
 #include "Tables/LookupTable.h"
 #include "Types.h"
+#include <Serializable.h>
 
 namespace cstf {
 
+using namespace serialize;
+
 #pragma pack(1)
-struct RoundLUTEntry : IStringable<RoundLUTEntry> {
+struct RoundLUTEntry : IStringable<RoundLUTEntry>,
+                       public Serializable<RoundLUTEntry> {
     u32 offset : 24 {};
     u32 frame_offset : 22 {};
 
@@ -29,18 +33,48 @@ struct RoundLUTEntry : IStringable<RoundLUTEntry> {
 static_assert(sizeof(RoundLUTEntry) == 6);
 
 class RoundLUT : public LookupTable<RoundLUT, RoundLUTEntry, EventLUT> {
-    void deserialize_data(istream const& stream, RoundLUTEntry const& entry, size_t base)
-    {
-        if (entry.type != RoundLUTEntry::ROUND)
-            return;
-
-        LookupTable<RoundLUT, RoundLUTEntry, EventLUT>::deserialize_data(stream, entry, base);
-    }
-
     friend LookupTable<RoundLUT, RoundLUTEntry, EventLUT>;
 
 public:
     RoundLUT() = default;
+
+    void accept(BaseDeserializer const& visitor)
+    {
+        LookupTable<RoundLUT, RoundLUTEntry, EventLUT>::accept(visitor);
+    }
+
+    void accept(BaseSerializer const& visitor)
+    {
+        LookupTable<RoundLUT, RoundLUTEntry, EventLUT>::accept(visitor);
+    }
+
+    void accept(BaseDeserializer const& visitor, RoundLUTEntry entry, size_t base)
+    {
+        // FIXME: We should allow for events in pauses, e.g. player purchase/join/etc
+        if (entry.type != RoundLUTEntry::Type::ROUND)
+            return;
+
+        size_t position = base + m_offset_size * entry.offset;
+        visitor.stream()->seekg(position);
+
+        m_data.emplace_back();
+        m_data.back().accept(visitor);
+    }
 };
+
+namespace serialize {
+
+    template<>
+    struct Serializer<RoundLUT> : BaseSerializer {
+        void visit(RoundLUT const& lut)  const{
+            std::println("hello, world");
+        }
+    };
+
+    // template <>
+    // struct Deserializer<RoundLUT> : BaseSerializer {
+    // };
+
+}
 
 };
