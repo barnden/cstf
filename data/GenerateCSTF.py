@@ -63,9 +63,9 @@ CSTF_round_event_LUT.insert(0, len(CSTF_round_event_LUT) * 6)
 # Assuming type 0 is PlayerMoveEvent and type 1 is PlayerDamageEvent
 CSTF_round_event_data = [
     # DamageEvent: Player 0 damaged Player 1 (15HP, 7 Armor)
-    0b00000000_00000001, # 0
-    0b00001111_00000111,
     0b00000000_00000000,
+    0b00001111_00000111,
+    0b00000000_00000001, # 0
     # MoveEvent: Player 2 set pitch to 27.99 deg and yaw to 275.98 deg
     #                         X: -1439.76, Y: -1322.04, Z: 11551.87
     # 0b0010_0010011111010_110001000100001,
@@ -92,25 +92,25 @@ CSTF_round_event_data = [
     0b1101011001100110,
     0b0100010000100000,
     # DamageEvent: Player 0 damaged Player 1 (15HP, 7 Armor)
+    0b00000000_00000000,
+    0b00001111_00000111,
     0b00000000_00000001, # 23
-    0b00001111_00000111,
-    0b00000000_00000000,
     # DamageEvent: Player 2 damaged Player 8 (3HP, 1 Armor)
-    0b00000010_00001000, # 26
+    0b00000000_00000000,
     0b00000011_00000001,
-    0b00000000_00000000,
+    0b00000010_00001000, # 26
     # DamageEvent: Player 4 damaged Player 9 (86HP, 0 Armor)
-    0b00000100_00001001, # 29
+    0b00000000_00000000,
     0b01010110_00000000,
-    0b00000000_00000000,
+    0b00000100_00001001, # 29
     # DamageEvent: Player 10 damaged Player 10 (5HP, 1 Armor)
-    0b00001010_00001010, # 32
+    0b00000000_00000000,
     0b00000101_00000001,
-    0b00000000_00000000,
+    0b00001010_00001010, # 32
     # DamageEvent: Player 1 damaged Player 0 (15HP, 7 Armor)
-    0b00000001_00000000, # 35
-    0b00001111_00000111,
     0b00000000_00000000,
+    0b00001111_00000111,
+    0b00000001_00000000, # 35
     # MoveEvent: Player 2 set pitch to 160.25 deg and yaw to 195.14 deg
     #                         X: 478.91, Y: -3480.56, Z: 355.27
     0b00100111_00000000, # yaw / padding (38)
