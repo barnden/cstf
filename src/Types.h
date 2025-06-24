@@ -5,6 +5,7 @@
 #include <cxxabi.h>
 #include <format>
 #include <ranges>
+#include <type_traits>
 
 #include "Stream.h"
 
@@ -13,6 +14,16 @@
 #else
 #    define ASSERT_NOT_REACHED __builtin_unreachable();
 #endif
+
+[[nodiscard]] consteval auto demangle(std::type_info const& info) -> std::string
+{
+    int status {};
+    char* name = abi::__cxa_demangle(info.name(), NULL, NULL, &status);
+    std::string result { name };
+    free(name);
+
+    return result;
+}
 
 // Copied from https://www.reddit.com/r/cpp/comments/l37uui/comment/gkdag33/
 template <typename T, T... S, typename F>
@@ -35,11 +46,8 @@ public:
 
     constexpr auto to_string() const noexcept -> std::string
     {
-        int status {};
 
-        char* type = abi::__cxa_demangle(typeid(Derived).name(), NULL, NULL, &status);
-        std::string result = std::format("{} does not implement to_string()", type);
-        free(type);
+        std::string result = std::format("{} does not implement to_string()", demangle(typeid(Derived)));
 
         return result;
     }
