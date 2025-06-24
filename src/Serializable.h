@@ -3,6 +3,7 @@
 #include "Types.h"
 
 #include <bit>
+#include <type_traits>
 #ifndef NDEBUG
 #    include <print>
 #endif
@@ -86,7 +87,12 @@ struct Serializer : BaseSerializer {
 
     void visit(T const& serializable) const
     {
-        m_stream->write(std::bit_cast<char const*>(&serializable), sizeof(T));
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            m_stream->write(std::bit_cast<char*>(&serializable), sizeof(T));
+        } else {
+            std::println("Serializer<{}> does not implement default visit() member for non-trivally copyable types.", demangle(typeid(T)));
+            ASSERT_NOT_REACHED;
+        }
     }
 };
 
@@ -104,7 +110,12 @@ struct Deserializer : BaseDeserializer {
 
     void visit(T& serializable) const
     {
-        m_stream->read(std::bit_cast<char*>(&serializable), sizeof(T));
+        if constexpr (std::is_trivially_copyable_v<T>) {
+            m_stream->read(std::bit_cast<char*>(&serializable), sizeof(T));
+        } else {
+            std::println("Deserializer<{}> does not implement default visit() member for non-trivally copyable types.", demangle(typeid(T)));
+            ASSERT_NOT_REACHED;
+        }
     }
 };
 
