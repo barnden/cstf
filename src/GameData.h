@@ -3,6 +3,7 @@
 #include "Serializable.h"
 #include "Types.h"
 
+#include <bit>
 #include <string>
 #include <vector>
 
@@ -41,10 +42,10 @@ namespace serialize {
             m_stream.pad(4);
 
             u32 player_count = game.players.size();
-            m_stream->write(reinterpret_cast<char const*>(&player_count), 4);
+            m_stream->write(std::bit_cast<char const*>(&player_count), 4);
 
             for (auto&& player : game.players) {
-                m_stream->write(reinterpret_cast<char const*>(&player), 8);
+                m_stream->write(std::bit_cast<char const*>(&player), 8);
             }
 
             for (auto&& username : game.usernames) {
@@ -70,13 +71,13 @@ namespace serialize {
             u32 player_count {};
             player_count &= 0xFF;
 
-            m_stream->read(reinterpret_cast<char*>(&player_count), 4);
+            m_stream->read(std::bit_cast<char*>(&player_count), 4);
 
             game.players.resize(player_count);
             game.usernames.resize(player_count);
 
             for (auto&& player : game.players) {
-                m_stream->read(reinterpret_cast<char*>(&player), 8);
+                m_stream->read(std::bit_cast<char*>(&player), 8);
             }
 
             for (auto&& username : game.usernames) {

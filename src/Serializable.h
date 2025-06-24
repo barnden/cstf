@@ -2,6 +2,7 @@
 
 #include "Types.h"
 
+#include <bit>
 #ifndef NDEBUG
 #    include <print>
 #endif
@@ -85,7 +86,7 @@ struct Serializer : BaseSerializer {
 
     void visit(T const& serializable) const
     {
-        m_stream->write(reinterpret_cast<char const*>(&serializable), sizeof(T));
+        m_stream->write(std::bit_cast<char const*>(&serializable), sizeof(T));
     }
 };
 
@@ -103,7 +104,7 @@ struct Deserializer : BaseDeserializer {
 
     void visit(T& serializable) const
     {
-        m_stream->read(reinterpret_cast<char*>(&serializable), sizeof(T));
+        m_stream->read(std::bit_cast<char*>(&serializable), sizeof(T));
     }
 };
 

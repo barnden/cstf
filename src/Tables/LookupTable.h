@@ -3,6 +3,7 @@
 #include "Serializable.h"
 #include "Types.h"
 
+#include <bit>
 #include <cxxabi.h>
 #include <vector>
 
@@ -70,10 +71,10 @@ namespace serialize {
             m_stream.pad(Alignment);
 
             u32 num_bytes = lut.m_entries.size() * sizeof(Entry);
-            m_stream->write(reinterpret_cast<char const*>(&num_bytes), 4);
+            m_stream->write(std::bit_cast<char const*>(&num_bytes), 4);
 
             for (auto&& entry : lut.m_entries) {
-                m_stream->write(reinterpret_cast<char const*>(&entry), sizeof(Entry));
+                m_stream->write(std::bit_cast<char const*>(&entry), sizeof(Entry));
             }
 
             m_stream.pad(Alignment);
