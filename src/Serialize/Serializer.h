@@ -99,7 +99,7 @@ struct Serializer : BaseSerializer {
 template <typename T>
 struct Deserializer : BaseDeserializer {
     template <typename U>
-    constexpr auto to() const -> Deserializer<U> const&
+    constexpr auto to() const -> auto const&
     {
         if constexpr (std::is_same_v<U, BaseDeserializer>) {
             return static_cast<BaseDeserializer const&>(*this);
@@ -116,20 +116,6 @@ struct Deserializer : BaseDeserializer {
             std::println("Deserializer<{}> does not implement default visit() member for non-trivally copyable types.", demangle(typeid(T)));
             ASSERT_NOT_REACHED;
         }
-    }
-};
-
-template <typename Derived>
-class Serializable {
-public:
-    void accept(BaseSerializer const& visitor) const
-    {
-        visitor.to<Derived>().visit(reinterpret_cast<Derived const&>(*this));
-    }
-
-    void accept(BaseDeserializer const& visitor)
-    {
-        visitor.to<Derived>().visit(reinterpret_cast<Derived&>(*this));
     }
 };
 

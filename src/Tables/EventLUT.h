@@ -4,8 +4,6 @@
 #include "Tables/LookupTable.h"
 #include "Types.h"
 
-#include <Serializable.h>
-
 namespace cstf {
 
 using namespace serialize;
@@ -37,45 +35,6 @@ public:
         : LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>()
     {
         m_offset_size = 2;
-    };
-};
-
-namespace serialize {
-    template <>
-    struct Serializer<EventLUT> : Serializer<LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>> {
-        void visit(EventLUT const&) const { ASSERT_NOT_REACHED; }
-
-        void visit(EventLUT const&, EventLUTEntry const&, auto const& data) const
-        {
-            std::visit(
-                [&](auto const& event) {
-                    event.accept(to<BaseSerializer>());
-                },
-                data);
-        }
-    };
-
-    template <>
-    struct Deserializer<EventLUT> : Deserializer<LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>> {
-        void visit(EventLUT&) const { ASSERT_NOT_REACHED; }
-
-        void visit(EventLUT& lut, EventLUTEntry entry, size_t base) const
-        {
-            size_t position = base + lut.m_offset_size * entry.offset;
-            m_stream->seekg(position);
-
-            for_sequence<EventTypes::size>(
-                [&](auto i) {
-                    using EventType = EventTypes::get<i>;
-
-                    if (entry.type != i)
-                        return;
-
-                    EventType event {};
-                    event.accept(to<BaseDeserializer>());
-                    lut.m_data.push_back(event);
-                });
-        }
     };
 };
 

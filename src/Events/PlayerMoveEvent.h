@@ -1,8 +1,8 @@
 #pragma once
 
 #include "BaseEvent.h"
+#include "Serialize/Serializable.h"
 #include "Types.h"
-#include <Serializable.h>
 #include <format>
 
 namespace cstf {

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Serializable.h"
+#include "Serialize/Serializable.h"
 #include "Types.h"
 
-#include <bit>
 #include <cxxabi.h>
 #include <vector>
 
@@ -61,54 +60,5 @@ public:
         m_entries.push_back(entry);
     }
 };
-
-namespace serialize {
-
-    template <class Derived, class Entry, class Data, size_t Alignment>
-    struct Serializer<LookupTable<Derived, Entry, Data, Alignment>> : BaseSerializer {
-        void visit(LookupTable<Derived, Entry, Data, Alignment> const& lut) const
-        {
-            m_stream.pad(Alignment);
-
-            u32 num_bytes = lut.m_entries.size() * sizeof(Entry);
-            m_stream->write(std::bit_cast<char const*>(&num_bytes), 4);
-
-            for (auto&& entry : lut.m_entries) {
-                m_stream->write(std::bit_cast<char const*>(&entry), sizeof(Entry));
-            }
-
-            m_stream.pad(Alignment);
-
-            for (auto&& [entry, data] : std::views::zip(lut.m_entries, lut.m_data)) {
-                to<Derived>().visit(static_cast<Derived const&>(lut), entry, data);
-            }
-        }
-    };
-
-    template <class Derived, class Entry, class Data, size_t Alignment>
-    struct Deserializer<LookupTable<Derived, Entry, Data, Alignment>> : BaseDeserializer {
-        void visit(LookupTable<Derived, Entry, Data, Alignment>& lut) const
-        {
-            m_stream.consume_padding(Alignment);
-
-            u32 num_bytes = 0;
-            m_stream->read(reinterpret_cast<char*>(&num_bytes), 4);
-
-            auto size = num_bytes / sizeof(Entry);
-            lut.m_entries = std::vector<Entry>(size);
-
-            for (auto&& entry : lut.m_entries) {
-                entry.accept(to<Entry>());
-            }
-
-            m_stream.consume_padding(Alignment);
-
-            size_t base = m_stream->tellg();
-            for (auto&& entry : lut.m_entries) {
-                to<Derived>().visit(static_cast<Derived&>(lut), entry, base);
-            }
-        }
-    };
-}
 
 };

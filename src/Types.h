@@ -15,7 +15,7 @@
 #    define ASSERT_NOT_REACHED __builtin_unreachable();
 #endif
 
-[[nodiscard]] consteval auto demangle(std::type_info const& info) -> std::string
+[[nodiscard]] constexpr auto demangle(std::type_info const& info) -> std::string
 {
     int status {};
     char* name = abi::__cxa_demangle(info.name(), NULL, NULL, &status);

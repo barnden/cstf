@@ -6,7 +6,7 @@
 
 #include "GameData.h"
 #include "Header.h"
-#include "Serializable.h"
+#include "Serialize/Serializable.h"
 #include "Tables/EventLUT.h"
 #include "Tables/RoundLUT.h"
 #include "Types.h"
@@ -19,6 +19,9 @@ class CSTF : public IStringable<CSTF>, public Serializable<CSTF> {
     Header m_header {};
     GameData m_game_data {};
     RoundLUT m_rounds {};
+
+    friend Serializer<CSTF>;
+    friend Deserializer<CSTF>;
 
 public:
     CSTF() = default;
@@ -49,13 +52,6 @@ public:
         }
 
         return result;
-    }
-
-    void accept(auto const& visitor)
-    {
-        m_header.accept(visitor);
-        m_game_data.accept(visitor);
-        m_rounds.accept(visitor);
     }
 };
 
