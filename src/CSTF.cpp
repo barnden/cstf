@@ -1,7 +1,7 @@
 #include "CSTF.h"
-#include "GameData.h"
 #include "Serialize/Serialize.h"
 
+#include <Serialize/Serializer.h>
 #include <fstream>
 #include <print>
 #include <string>
@@ -25,14 +25,18 @@ auto main(int argc, char** argv) -> int
     CSTF cstf {};
     {
         auto file = std::ifstream(cstf_read_path, std::ios::binary);
+
         BaseDeserializer deserializer(file);
+
+        // Example: Read round and event LUT entries, but not the actual event data
+        // deserializer.options().flip(BaseDeserializer::Flags::ReadEventData);
 
         if (!file.is_open()) {
             std::println("Failed to open \"{}\" for reading.", cstf_read_path);
             exit(0);
         }
 
-        cstf.accept(deserializer);
+        deserializer(cstf);
 
         std::println("{}", cstf);
     }
@@ -46,6 +50,6 @@ auto main(int argc, char** argv) -> int
             exit(0);
         }
 
-        cstf.accept(serializer);
+        serializer(cstf);
     }
 }

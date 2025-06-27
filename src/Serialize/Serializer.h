@@ -3,6 +3,7 @@
 #include "Types.h"
 
 #include <bit>
+#include <bitset>
 #include <type_traits>
 #ifndef NDEBUG
 #    include <print>
@@ -14,6 +15,24 @@ template <class Stream, template <class T> class Derived>
 class BaseSerializationVisitor {
 protected:
     Stream m_stream;
+
+    void visit(auto const&) const
+    {
+#ifndef NDEBUG
+        std::println("BaseSerializationVisitor::visit(const&) should not be reached!");
+#endif
+
+        ASSERT_NOT_REACHED;
+    }
+
+    void visit(auto&) const
+    {
+#ifndef NDEBUG
+        std::println("BaseSerializationVisitor::visit(&) should not be reached!");
+#endif
+
+        ASSERT_NOT_REACHED;
+    }
 
 public:
     BaseSerializationVisitor(Stream const& stream)
@@ -36,22 +55,16 @@ public:
         return m_stream;
     }
 
-    void visit(auto const&) const
+    template <typename T>
+    void operator()(T& host) const
     {
-#ifndef NDEBUG
-        std::println("BaseSerializationVisitor::visit(const&) should not be reached!");
-#endif
-
-        ASSERT_NOT_REACHED;
+        host.accept(to<T>());
     }
 
-    void visit(auto&) const
+    template <typename T>
+    void operator()(T const& host) const
     {
-#ifndef NDEBUG
-        std::println("BaseSerializationVisitor::visit(&) should not be reached!");
-#endif
-
-        ASSERT_NOT_REACHED;
+        host.accept(to<T>());
     }
 };
 
@@ -69,8 +82,49 @@ struct Deserializer;
 
 class BaseDeserializer : public BaseSerializationVisitor<istream, Deserializer> {
 public:
+    enum Flags {
+        ReadRoundLUT,
+        ReadEventLUT,
+        ReadEventData,
+        Flags_MAX
+    };
+    using flag_t = std::bitset<static_cast<size_t>(Flags::Flags_MAX)>;
+
+protected:
+    flag_t m_flags;
+
+public:
     BaseDeserializer(istream const& stream)
-        : BaseSerializationVisitor<istream, Deserializer>(stream) { };
+        : BaseDeserializer(stream, flag_t {}.set()) { };
+
+    BaseDeserializer(istream const& stream, flag_t flags)
+        : BaseSerializationVisitor<istream, Deserializer>(stream)
+        , m_flags(flags) { };
+
+    auto options() noexcept -> flag_t&
+    {
+        return m_flags;
+    }
+
+    template <typename T>
+    void operator()(T& host) const
+    {
+        if (!m_flags[Flags::ReadRoundLUT]) {
+            if (m_flags[Flags::ReadEventLUT]) {
+                std::println("[Deserializer] ReadEventLUT is ignored because ReadRoundLUT is unset.");
+            }
+
+            if (m_flags[Flags::ReadEventData]) {
+                std::println("[Deserializer] ReadEventData is ignored because ReadRoundLUT is unset.");
+            }
+        }
+
+        if (m_flags[Flags::ReadEventData] && !m_flags[Flags::ReadEventLUT]) {
+            std::println("[Deserializer] ReadEventData is ignored because ReadEventLUT is unset.");
+        }
+
+        BaseSerializationVisitor<istream, Deserializer>::operator()(host);
+    }
 };
 
 template <typename T>

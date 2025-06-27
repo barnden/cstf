@@ -36,18 +36,32 @@ public:
         std::println("{}", m_header);
         std::println("{}", m_game_data);
 
+        // FIXME: Move this logic to the appropriate to_string() methods in the respective classes
         for (auto&& round : m_rounds.entries()) {
             std::println("{}", round);
 
             if (round.type != RoundLUTEntry::Type::ROUND)
                 continue;
 
-            auto const& events = m_rounds.data()[cur_round++];
-            for (auto const&& [event, data] : zip(events.entries(), events.data())) {
-                std::println("\t{}", event);
-                std::visit(
-                    [](auto const& e) { std::println("\t\t{}", e); },
-                    data);
+            if (m_rounds.data().size() == 0)
+                continue;
+
+            auto const& events = m_rounds.data().at(cur_round++);
+
+            if (events.entries().size() == 0)
+                continue;
+
+            if (events.entries().size() == events.data().size()) {
+                for (auto const&& [event, data] : zip(events.entries(), events.data())) {
+                    std::println("\t{}", event);
+                    std::visit(
+                        [](auto const& e) { std::println("\t\t{}", e); },
+                        data);
+                }
+            } else {
+                for (auto&& event : events.entries()) {
+                    std::println("\t{}", event);
+                }
             }
         }
 

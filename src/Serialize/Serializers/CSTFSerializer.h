@@ -21,7 +21,9 @@ struct Deserializer<CSTF> : public BaseDeserializer {
     {
         cstf.m_header.accept(to<BaseDeserializer>());
         cstf.m_game_data.accept(to<BaseDeserializer>());
-        cstf.m_rounds.accept(to<BaseDeserializer>());
+
+        if (m_flags[Flags::ReadRoundLUT])
+            cstf.m_rounds.accept(to<BaseDeserializer>());
     }
 };
 

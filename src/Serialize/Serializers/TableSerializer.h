@@ -76,6 +76,10 @@ struct Deserializer<EventLUT> : Deserializer<LookupTable<EventLUT, EventLUTEntry
 
     void visit(EventLUT& lut, EventLUTEntry entry, size_t base) const
     {
+        // FIXME: We shouldn't dispatch in the first place if this flag is unset.
+        if (!m_flags[Flags::ReadEventData])
+            return;
+
         size_t position = base + lut.m_offset_size * entry.offset;
         m_stream->seekg(position);
 
@@ -116,8 +120,10 @@ struct Deserializer<RoundLUT> : Deserializer<LookupTable<RoundLUT, RoundLUTEntry
         size_t position = base + lut.m_offset_size * entry.offset;
         m_stream->seekg(position);
 
-        lut.m_data.emplace_back();
-        lut.m_data.back().accept(to<BaseDeserializer>());
+        if (m_flags[Flags::ReadEventLUT]) {
+            lut.m_data.emplace_back();
+            lut.m_data.back().accept(to<BaseDeserializer>());
+        }
     }
 };
 
