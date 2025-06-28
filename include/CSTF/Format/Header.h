@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Serialize/Serializable.h"
-#include "Types.h"
+#include "CSTF/Serialize/Serializable.h"
+#include "CSTF/Utility/Types.h"
 
 #include <ranges>
 #include <string>

@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Serialize/Serializable.h"
-#include "Types.h"
+#include "CSTF/Serialize/Serializable.h"
+#include "CSTF/Utility/Types.h"
 
-#include <bit>
 #include <string>
 #include <vector>
 

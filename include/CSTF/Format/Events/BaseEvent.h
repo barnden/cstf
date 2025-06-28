@@ -1,12 +1,11 @@
 #pragma once
 
-#include "Serialize/Serializable.h"
-#include "Types.h"
-#include <Serialize/Serializer.h>
+#include "CSTF/Serialize/Serializable.h"
+#include "CSTF/Utility/Types.h"
 
 namespace cstf {
 
-using serialize::Serializable, serialize::Deserializer;
+using cstf::serialize::Serializable;
 
 template <class Derived>
 class Event : public IStringable<Event<Derived>>,

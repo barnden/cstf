@@ -3,8 +3,8 @@
 #include <variant>
 #include <type_traits>
 
-#include "PlayerDamageEvent.h"
-#include "PlayerMoveEvent.h"
+#include "CSTF/Format/Events/PlayerDamageEvent.h"
+#include "CSTF/Format/Events/PlayerMoveEvent.h"
 
 namespace cstf {
 

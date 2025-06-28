@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Tables/EventLUT.h"
-#include "Tables/LookupTable.h"
-#include "Types.h"
+#include "CSTF/Format/Tables/EventLUT.h"
+#include "CSTF/Format/Tables/LookupTable.h"
+#include "CSTF/Utility/Types.h"
 
 namespace cstf {
 

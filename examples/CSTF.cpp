@@ -1,7 +1,5 @@
-#include "CSTF.h"
-#include "Serialize/Serialize.h"
+#include <CSTF.h>
 
-#include <Serialize/Serializer.h>
 #include <fstream>
 #include <print>
 #include <string>

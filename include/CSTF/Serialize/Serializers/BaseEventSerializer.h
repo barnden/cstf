@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Events/BaseEvent.h"
-#include "Serialize/Serializer.h"
+#include "CSTF/Events/BaseEvent.h"
+#include "CSTF/Serialize/Serializer.h"
 
 namespace cstf::serialize {
 

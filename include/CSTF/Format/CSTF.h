@@ -1,15 +1,14 @@
 #pragma once
 
-#include <print>
 #include <variant>
 #include <vector>
 
-#include "GameData.h"
-#include "Header.h"
-#include "Serialize/Serializable.h"
-#include "Tables/EventLUT.h"
-#include "Tables/RoundLUT.h"
-#include "Types.h"
+#include "CSTF/Format/GameData.h"
+#include "CSTF/Format/Header.h"
+#include "CSTF/Format/Tables/EventLUT.h"
+#include "CSTF/Format/Tables/RoundLUT.h"
+#include "CSTF/Serialize/Serializable.h"
+#include "CSTF/Utility/Types.h"
 
 namespace cstf {
 
@@ -30,15 +29,15 @@ public:
     {
         using std::views::zip;
 
-        std::string result;
+        std::string result {};
         auto cur_round = 0;
 
-        std::println("{}", m_header);
-        std::println("{}", m_game_data);
+        result += std::format("{}\n", m_header);
+        result += std::format("{}\n", m_game_data);
 
         // FIXME: Move this logic to the appropriate to_string() methods in the respective classes
         for (auto&& round : m_rounds.entries()) {
-            std::println("{}", round);
+            result += std::format("{}\n", round);
 
             if (round.type != RoundLUTEntry::Type::ROUND)
                 continue;
@@ -53,14 +52,16 @@ public:
 
             if (events.entries().size() == events.data().size()) {
                 for (auto const&& [event, data] : zip(events.entries(), events.data())) {
-                    std::println("\t{}", event);
+                    result += std::format("\t{}\n", event);
                     std::visit(
-                        [](auto const& e) { std::println("\t\t{}", e); },
+                        [&result](auto const& e) {
+                            result += std::format("\t\t{}\n", e);
+                        },
                         data);
                 }
             } else {
                 for (auto&& event : events.entries()) {
-                    std::println("\t{}", event);
+                    result += std::format("\t{}\n", event);
                 }
             }
         }

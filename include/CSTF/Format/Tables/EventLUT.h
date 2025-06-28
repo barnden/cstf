@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Events/Events.h"
-#include "Tables/LookupTable.h"
-#include "Types.h"
+#include "CSTF/Format/Events/Events.h"
+#include "CSTF/Format/Tables/LookupTable.h"
+#include "CSTF/Utility/Types.h"
 
 namespace cstf {
 

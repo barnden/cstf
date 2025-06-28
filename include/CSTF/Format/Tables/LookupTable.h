@@ -1,9 +1,8 @@
 #pragma once
 
-#include "Serialize/Serializable.h"
-#include "Types.h"
+#include "CSTF/Serialize/Serializable.h"
+#include "CSTF/Utility/Types.h"
 
-#include <cxxabi.h>
 #include <vector>
 
 namespace cstf {
@@ -36,13 +35,7 @@ public:
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
-        int status {};
-
-        char* type = abi::__cxa_demangle(typeid(Entry).name(), NULL, NULL, &status);
-        std::string result = std::format("LookupTable<{}>(size: {})", type, m_entries.size());
-        free(type);
-
-        return result;
+        return std::format("LookupTable<{}>(size: {})", demangle(typeid(Entry)), m_entries.size());
     }
 
     auto entries() const -> std::vector<Entry> const&

@@ -7,7 +7,7 @@
 #include <ranges>
 #include <type_traits>
 
-#include "Stream.h"
+#include "CSTF/Utility/Stream.h"
 
 #if _MSC_VER && !__INTEL_COMPILER
 #    define ASSERT_NOT_REACHED __assume(false);

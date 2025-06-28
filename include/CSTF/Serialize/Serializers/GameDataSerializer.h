@@ -1,7 +1,9 @@
 #pragma once
 
-#include "GameData.h"
-#include "Serialize/Serializer.h"
+#include "CSTF/GameData.h"
+#include "CSTF/Serialize/Serializer.h"
+
+#include <bit>
 
 namespace cstf::serialize {
 template <>

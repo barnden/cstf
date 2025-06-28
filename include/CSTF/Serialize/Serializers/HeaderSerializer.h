@@ -1,7 +1,9 @@
 #pragma once
 
-#include "Serialize/Serializer.h"
-#include "Header.h"
+#include "CSTF/Header.h"
+#include "CSTF/Serialize/Serializer.h"
+
+#include <bit>
 
 namespace cstf::serialize {
 template <>

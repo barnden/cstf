@@ -1,7 +1,7 @@
 #pragma once
 
-#include "CSTF.h"
-#include "Serialize/Serializer.h"
+#include "CSTF/Format/CSTF.h"
+#include "CSTF/Serialize/Serializer.h"
 
 namespace cstf::serialize {
 
