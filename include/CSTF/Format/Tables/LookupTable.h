@@ -35,7 +35,7 @@ public:
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
-        return std::format("LookupTable<{}>(size: {})", demangle(typeid(Entry)), m_entries.size());
+        return std::format("LookupTable<{}>(entries: {})", demangle(typeid(Entry)), m_entries.size());
     }
 
     auto entries() const -> std::vector<Entry> const&
