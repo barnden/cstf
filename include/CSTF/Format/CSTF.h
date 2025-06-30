@@ -27,7 +27,6 @@ public:
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
-        using std::views::zip;
 
         std::string result {};
         auto cur_round = 0;
@@ -47,23 +46,7 @@ public:
 
             auto const& events = m_rounds.data().at(cur_round++);
 
-            if (events.entries().size() == 0)
-                continue;
-
-            if (events.entries().size() == events.data().size()) {
-                for (auto const&& [event, data] : zip(events.entries(), events.data())) {
-                    result += std::format("\t{}\n", event);
-                    std::visit(
-                        [&result](auto const& e) {
-                            result += std::format("\t\t{}\n", e);
-                        },
-                        data);
-                }
-            } else {
-                for (auto&& event : events.entries()) {
-                    result += std::format("\t{}\n", event);
-                }
-            }
+            result += std::format("{}\n", events);
         }
 
         return result;

@@ -30,12 +30,45 @@ class EventLUT : public LookupTable<EventLUT, EventLUTEntry, EventTypes::variant
     friend LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>;
     friend Deserializer<EventLUT>;
 
+    u32 m_table_size {};
+    u32 m_last_frame {};
+    std::array<std::optional<u32>, EventTypes::size> m_events {};
+
 public:
     EventLUT()
         : LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>()
     {
         m_offset_size = 2;
     };
+
+    [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
+    {
+        using std::views::zip;
+
+        auto result = LookupTable<EventLUT, EventLUTEntry, EventTypes::variant_t>::to_string();
+
+        if (m_entries.size() == 0)
+            return result;
+
+        result += '\n';
+
+        if (m_entries.size() == m_data.size()) {
+            for (auto const&& [event, data] : zip(m_entries, m_data)) {
+                result += std::format("\t{}\n", event);
+                std::visit(
+                    [&result](auto const& e) {
+                        result += std::format("\t\t{}\n", e);
+                    },
+                    data);
+            }
+        } else {
+            for (auto&& event : m_entries) {
+                result += std::format("\t{}\n", event);
+            }
+        }
+
+        return result;
+    }
 };
 
 };
