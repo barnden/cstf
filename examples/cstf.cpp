@@ -5,6 +5,7 @@
 #include <CSTF.h>
 
 #include <CSTF/Format/Tables/RoundLUT.h>
+#include <CSTF/Serialize/Serializer.h>
 #include <chrono>
 #include <print>
 #include <random>
@@ -47,7 +48,7 @@ struct create_event<PlayerMoveEvent> {
     {
         static auto dist_player = std::uniform_int_distribution<u8>(0, 10);
         static auto dist_xy_position = std::uniform_real_distribution<float>(-5000, 5000);
-        static auto dist_z_position = std::uniform_real_distribution<float>(-500, 500);
+        static auto dist_z_position = std::uniform_real_distribution<float>(-350, 350);
         static auto dist_angle = std::uniform_int_distribution<u32>(0, (1u << 24) - 1u);
 
         auto event = PlayerMoveEvent {};
@@ -119,51 +120,32 @@ auto main() -> int
     cstf.add_player({ 76561198065277623 }, "brandon");
     cstf.add_player({ 76561198039184405 }, "BirdehBox");
 
-    cstf.set_team(0, "Tag A", "Team A");
-    cstf.set_team(1, "Tag B", "Team B");
+    cstf.set_team(0, "Team A", "Tag A");
+    cstf.set_team(1, "Team B", "Tag B");
 
     // Rounds
     auto frames = 0;
     auto pauses = 0;
     auto rounds = 0;
 
-    static auto dist_pause = std::bernoulli_distribution(.125);
-
     auto random_round_time = [&mt, &frames]() {
-        // Generate a random round time, in ticks, and add it to the frame counter
-        // Returns the number of ticks added to counter.
+        // Generate a random round time, and add it to the frame counter
+        static auto dist_round_time = std::normal_distribution<float>(80, 12.5);
 
-        static auto dist_round_time = std::uniform_int_distribution<int>(10, 105);
-        static auto dist_bomb_plant = std::bernoulli_distribution(.33);
-        static auto dist_bomb_diffused = std::bernoulli_distribution(0.5);
-        static auto dist_bomb_duration = std::uniform_int_distribution<int>(5, 45);
+        auto seconds = 22.f + std::clamp(dist_round_time(mt), 10.f, 145.f);
+        auto last = frames;
 
-        auto seconds = 0;
-
-        seconds += 0; // Freeze-time
-        seconds += dist_round_time(mt); // Round duration (0:10 - 1:45)
-
-        if (dist_bomb_plant(mt)) {
-            if (dist_bomb_diffused(mt)) {
-                seconds += 45; // Bomb exploded.
-            } else {
-                seconds += dist_bomb_duration(mt); // Time until bomb defused
-            }
-        }
-
-        seconds += 7; // Round-end time
-
-        auto ticks = seconds * 64;
-
+        auto ticks = static_cast<int>(64 * seconds);
         frames += ticks;
 
-        return ticks;
+        return last;
     };
 
+    static auto dist_pause = std::bernoulli_distribution(.125);
     while (rounds != num_rounds) {
         // Upto 4 30-second pauses per game
         if ((pauses < 4 && dist_pause(mt)) || (pauses == 0 && rounds > 0)) {
-            cstf.add_round(RoundLUTEntry::PAUSE, 30 * 64);
+            cstf.add_round(RoundLUTEntry::PAUSE, frames + 30 * 64);
             pauses++;
 
             continue;
