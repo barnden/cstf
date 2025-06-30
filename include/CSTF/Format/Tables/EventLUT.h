@@ -41,6 +41,32 @@ public:
         m_offset_size = 2;
     };
 
+    template <typename T>
+        requires(std::is_base_of_v<Event<T>, T>)
+    void add(T const& event, u32 frame = 0)
+    {
+        // Assumption is that frame is monotonically increasing.
+
+        EventLUTEntry entry {
+            .offset = m_table_size,
+            .next = 0x3FFFF,
+            .frames = std::max(m_last_frame, frame) - m_last_frame,
+            .type = EventTypes::index<T>()
+        };
+
+        auto& last_event = m_events[EventTypes::index<T>()];
+
+        if (last_event.has_value()) {
+            m_entries[*last_event].next = m_entries.size() - *last_event;
+        }
+
+        last_event = m_entries.size();
+        m_last_frame = std::max(m_last_frame, frame);
+
+        m_entries.push_back(entry);
+        m_data.push_back(event);
+    }
+
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
         using std::views::zip;
