@@ -62,7 +62,7 @@ public:
 
         last_event = m_entries.size();
         m_last_frame = std::max(m_last_frame, frame);
-        m_table_size += sizeof(T) / m_offset_size;
+        m_table_size += sizeof(T);
 
         m_entries.push_back(entry);
         m_data.push_back(std::move(event));
@@ -70,7 +70,8 @@ public:
 
     [[nodiscard]] constexpr auto size() const noexcept
     {
-        return m_table_size;
+        // 4 bytes for the size of the table entry sizes
+        return 4 + m_table_size;
     }
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
