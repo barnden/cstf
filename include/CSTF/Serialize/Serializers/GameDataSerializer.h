@@ -1,6 +1,6 @@
 #pragma once
 
-#include "CSTF/GameData.h"
+#include "CSTF/Format/GameData.h"
 #include "CSTF/Serialize/Serializer.h"
 
 #include <bit>

@@ -1,10 +1,10 @@
 #pragma once
 
-#include "CSTF/Events/Events.h"
+#include "CSTF/Format/Events/Events.h"
+#include "CSTF/Format/Tables/EventLUT.h"
+#include "CSTF/Format/Tables/LookupTable.h"
+#include "CSTF/Format/Tables/RoundLUT.h"
 #include "CSTF/Serialize/Serializer.h"
-#include "CSTF/Tables/EventLUT.h"
-#include "CSTF/Tables/LookupTable.h"
-#include "CSTF/Tables/RoundLUT.h"
 
 #include <bit>
 

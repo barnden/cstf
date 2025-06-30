@@ -1,7 +1,7 @@
 #pragma once
 
-#include <variant>
 #include <type_traits>
+#include <variant>
 
 #include "CSTF/Format/Events/PlayerDamageEvent.h"
 #include "CSTF/Format/Events/PlayerMoveEvent.h"
@@ -9,17 +9,35 @@
 namespace cstf {
 
 // Adapted from https://stackoverflow.com/a/62139716
-template <class... T>
+template <class... Ts>
 struct type_array {
-    using tuple_t = std::tuple<T...>;
-    using variant_t = std::variant<T...>;
+    using tuple_t = std::tuple<Ts...>;
+    using variant_t = std::variant<Ts...>;
 
     template <size_t I>
     using get = std::tuple_element_t<I, tuple_t>;
 
-    static constexpr size_t size = sizeof...(T);
+    template <typename T, typename U, typename... Types>
+    static constexpr auto index(size_t i = 0uz) -> size_t
+    {
+        if constexpr (std::is_same_v<T, U>) {
+            return i;
+        } else {
+            return index<T, Types...>(i + 1);
+        }
+    }
 
-    static_assert(std::conjunction_v<std::is_trivially_copyable<typename T::Data>...>, "All event data must be trivially copyable.");
+    template <typename T>
+    static constexpr auto index() -> size_t
+    {
+        return index<T, Ts...>();
+    }
+
+    static constexpr size_t size = sizeof...(Ts);
+
+    static_assert(
+        std::conjunction_v<std::is_trivially_copyable<typename Ts::Data>...>,
+        "All event data must be trivially copyable.");
 };
 
 using EventTypes = type_array<

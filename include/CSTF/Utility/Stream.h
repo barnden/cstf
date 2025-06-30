@@ -32,13 +32,6 @@ public:
         return padding;
     }
 
-    template <typename T>
-    auto operator>>(T& rhs) const -> istream const&
-    {
-        m_stream >> rhs;
-        return *this;
-    }
-
     [[nodiscard]] auto operator*() const -> std::istream& { return m_stream; }
     [[nodiscard]] auto operator->() const -> std::istream* { return &m_stream; }
 
@@ -70,13 +63,6 @@ public:
             m_stream.write(&dummy, 1);
 
         return padding;
-    }
-
-    template <typename T>
-    auto operator<<(T& rhs) const -> ostream const&
-    {
-        m_stream << rhs;
-        return *this;
     }
 
     [[nodiscard]] auto operator*() const -> std::ostream& { return m_stream; }
