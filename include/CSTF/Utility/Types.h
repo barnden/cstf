@@ -101,6 +101,11 @@ constexpr auto enumerate(auto&& v)
 struct SteamID : public IStringable<SteamID> {
     u64 steam64;
 
+    SteamID() = default;
+
+    SteamID(u64 steam64)
+        : steam64(steam64) { };
+
     operator u64() const
     {
         return steam64;

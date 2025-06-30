@@ -47,11 +47,6 @@ public:
     {
         return m_data;
     }
-
-    virtual void add(Entry& entry)
-    {
-        m_entries.push_back(entry);
-    }
 };
 
 };

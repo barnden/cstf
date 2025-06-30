@@ -12,22 +12,22 @@ struct Serializer<GameData> : BaseSerializer {
     {
         m_stream.pad(4);
 
-        u32 player_count = game.players.size();
+        u32 player_count = game.m_players.size();
         m_stream->write(std::bit_cast<char const*>(&player_count), 4);
 
-        for (auto&& player : game.players) {
+        for (auto&& player : game.m_players) {
             m_stream->write(std::bit_cast<char const*>(&player), 8);
         }
 
-        for (auto&& username : game.usernames) {
+        for (auto&& username : game.m_usernames) {
             m_stream->write(username.c_str(), username.size() + 1);
         }
 
-        for (auto&& tag : game.team_tags) {
+        for (auto&& tag : game.m_team_tags) {
             m_stream->write(tag.c_str(), tag.size() + 1);
         }
 
-        for (auto&& name : game.team_names) {
+        for (auto&& name : game.m_team_names) {
             m_stream->write(name.c_str(), name.size() + 1);
         }
     }
@@ -44,22 +44,22 @@ struct Deserializer<GameData> : BaseDeserializer {
 
         m_stream->read(std::bit_cast<char*>(&player_count), 4);
 
-        game.players.resize(player_count);
-        game.usernames.resize(player_count);
+        game.m_players.resize(player_count);
+        game.m_usernames.resize(player_count);
 
-        for (auto&& player : game.players) {
+        for (auto&& player : game.m_players) {
             m_stream->read(std::bit_cast<char*>(&player), 8);
         }
 
-        for (auto&& username : game.usernames) {
+        for (auto&& username : game.m_usernames) {
             std::getline(*m_stream, username, '\0');
         }
 
-        for (auto&& tag : game.team_tags) {
+        for (auto&& tag : game.m_team_tags) {
             std::getline(*m_stream, tag, '\0');
         }
 
-        for (auto&& name : game.team_names) {
+        for (auto&& name : game.m_team_names) {
             std::getline(*m_stream, name, '\0');
         }
     }

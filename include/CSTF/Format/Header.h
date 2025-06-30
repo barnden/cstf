@@ -14,7 +14,7 @@ class Header : IStringable<Header>, public Serializable<Header> {
     static constexpr auto g_magic_bytes = std::array<u8, 3> { 0xC5, 0x7F, 0x8B };
 
 public:
-    enum class Flags {
+    enum Flags : u8 {
         GSI = 1 << 0,
         MIRV = 1 << 1,
         KILLS = 1 << 2,
