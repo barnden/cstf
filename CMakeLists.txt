@@ -16,6 +16,6 @@ SET(CMAKE_CXX_FLAGS_RELEASE "-Os -flto")
 SET(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -fsanitize=address,leak,undefined")
 
 IF(PROJECT_IS_TOP_LEVEL)
-    add_example(events)
+    add_example(cstf)
     add_example(serialize)
 ENDIF()
