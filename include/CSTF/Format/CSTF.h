@@ -1,6 +1,6 @@
 #pragma once
 
-#include <variant>
+#include <initializer_list>
 #include <vector>
 
 #include "CSTF/Format/GameData.h"
@@ -26,7 +26,10 @@ class CSTF : public IStringable<CSTF>,
 public:
     CSTF() = default;
 
-    CSTF(std::string const& map_name, u32 build_info, u8 flags, u8 tick_rate = 64)
+    CSTF(std::string const& map_name, u32 build_info, Header::flag_t flags, u8 tick_rate = 64)
+        : m_header(map_name, build_info, flags, tick_rate) { };
+
+    CSTF(std::string const& map_name, u32 build_info, std::initializer_list<Header::Flags> flags, u8 tick_rate = 64)
         : m_header(map_name, build_info, flags, tick_rate) { };
 
     void add_player(SteamID const& steam64, std::string const& username)

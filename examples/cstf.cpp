@@ -112,7 +112,12 @@ auto main() -> int
     // Header
     auto map_name = "de_mirage";
     auto build_info = static_cast<u32>((sys_days { floor<days>(system_clock::now()) } - epoch).count());
-    u8 flags = Header::Flags::KILLS | Header::Flags::DAMAGE | Header::Flags::POSITIONS | Header::Flags::UTILITY;
+    auto flags = {
+        Header::Flags::KILLS,
+        Header::Flags::DAMAGE,
+        Header::Flags::POSITIONS,
+        Header::Flags::UTILITY,
+    };
 
     CSTF cstf { map_name, build_info, flags, 64 };
 
