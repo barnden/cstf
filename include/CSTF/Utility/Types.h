@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <concepts>
 #include <cstdint>
 #include <cxxabi.h>
@@ -14,6 +15,16 @@
 #else
 #    define ASSERT_NOT_REACHED __builtin_unreachable();
 #endif
+
+// FIXME: In the event that Valve enables non-64 tick servers we need to rethink hardcoding a tick type
+using tick = std::chrono::duration<
+    long long,
+    std::ratio_divide<std::chrono::seconds::period, std::ratio<64>>>;
+
+auto operator""_t(unsigned long long ticks) -> tick
+{
+    return tick { ticks };
+}
 
 [[nodiscard]] constexpr auto demangle(std::type_info const& info) -> std::string
 {

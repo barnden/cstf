@@ -4,8 +4,6 @@
 
 #include <CSTF.h>
 
-#include <CSTF/Format/Tables/RoundLUT.h>
-#include <CSTF/Serialize/Serializer.h>
 #include <chrono>
 #include <print>
 #include <random>
@@ -129,7 +127,7 @@ auto main() -> int
     cstf.set_team(1, "Team B", "Tag B");
 
     // Rounds
-    auto frames = 0;
+    auto frames = 0_t;
     auto pauses = 0;
     auto rounds = 0;
 
@@ -137,11 +135,10 @@ auto main() -> int
         // Generate a random round time, and add it to the frame counter
         static auto dist_round_time = std::normal_distribution<float>(80, 12.5);
 
-        auto seconds = 22.f + std::clamp(dist_round_time(mt), 10.f, 145.f);
+        auto round_time = 22s + duration<float>(std::clamp(dist_round_time(mt), 10.f, 145.f));
         auto last = frames;
 
-        auto ticks = static_cast<int>(64 * seconds);
-        frames += ticks;
+        frames += duration_cast<seconds>(round_time);
 
         return last;
     };
@@ -150,8 +147,10 @@ auto main() -> int
     while (rounds != num_rounds) {
         // Upto 4 30-second pauses per game
         if ((pauses < 4 && dist_pause(mt)) || (pauses == 0 && rounds > 0)) {
-            cstf.add_round(RoundLUTEntry::PAUSE, frames + 30 * 64);
+            cstf.add_round(RoundLUTEntry::PAUSE, frames);
+
             pauses++;
+            frames += 30s;
 
             continue;
         }

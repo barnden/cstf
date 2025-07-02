@@ -37,12 +37,12 @@ public:
         m_game_data.add_player(steam64, username);
     }
 
-    void add_round(RoundLUTEntry::Type type, u32 frame)
+    void add_round(RoundLUTEntry::Type type, tick frame)
     {
         m_rounds.add(type, frame);
     }
 
-    void add_round(RoundLUTEntry::Type type, u32 frame, EventLUT&& events)
+    void add_round(RoundLUTEntry::Type type, tick frame, EventLUT&& events)
     {
         m_rounds.add(type, frame, std::move(events));
     }
