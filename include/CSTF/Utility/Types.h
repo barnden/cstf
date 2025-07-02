@@ -101,9 +101,9 @@ constexpr auto enumerate(auto&& v)
 struct SteamID : public IStringable<SteamID> {
     u64 steam64;
 
-    SteamID() = default;
+    explicit SteamID() = default;
 
-    SteamID(u64 steam64)
+    explicit SteamID(u64 steam64)
         : steam64(steam64) { };
 
     operator u64() const
@@ -121,6 +121,11 @@ struct SteamID : public IStringable<SteamID> {
         return std::format("[{}:{}:{}]", g_universes[universe], data, account);
     }
 };
+
+auto operator""_sid(unsigned long long steam64) -> SteamID
+{
+    return SteamID { steam64 };
+}
 
 struct float3 {
     float x;

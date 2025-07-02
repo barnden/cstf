@@ -122,8 +122,8 @@ auto main() -> int
     CSTF cstf { map_name, build_info, flags, 64 };
 
     // GameData
-    cstf.add_player({ 76561198065277623 }, "brandon");
-    cstf.add_player({ 76561198039184405 }, "BirdehBox");
+    cstf.add_player(76561198065277623_sid, "brandon");
+    cstf.add_player(76561198039184405_sid, "BirdehBox");
 
     cstf.set_team(0, "Team A", "Tag A");
     cstf.set_team(1, "Team B", "Tag B");
