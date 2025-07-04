@@ -10,6 +10,10 @@ namespace cstf {
 
 // Adapted from https://stackoverflow.com/a/62139716
 template <class... Ts>
+// clang-format off
+    requires (std::is_nothrow_convertible_v<Ts, Event<Ts>> && ...) &&
+             (std::is_trivially_copyable_v<typename Ts::Data> && ...)
+// clang-format on
 struct type_array {
     using tuple_t = std::tuple<Ts...>;
     using variant_t = std::variant<Ts...>;
@@ -18,26 +22,20 @@ struct type_array {
     using get = std::tuple_element_t<I, tuple_t>;
 
     template <typename T, typename U, typename... Types>
-    static constexpr auto index(size_t i = 0uz) -> size_t
+    static constexpr auto index_impl(size_t i = 0uz) -> size_t
     {
         if constexpr (std::is_same_v<T, U>) {
             return i;
         } else {
-            return index<T, Types...>(i + 1);
+            return index_impl<T, Types...>(i + 1);
         }
     }
 
-    template <typename T>
-    static constexpr auto index() -> size_t
-    {
-        return index<T, Ts...>();
-    }
+    template <class T>
+        requires(std::is_nothrow_convertible_v<T, Event<T>>)
+    static constexpr auto index_of = index_impl<T, Ts...>();
 
     static constexpr size_t size = sizeof...(Ts);
-
-    static_assert(
-        std::conjunction_v<std::is_trivially_copyable<typename Ts::Data>...>,
-        "All event data must be trivially copyable.");
 };
 
 using EventTypes = type_array<

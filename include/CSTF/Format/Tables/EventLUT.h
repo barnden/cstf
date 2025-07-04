@@ -51,10 +51,10 @@ public:
             .offset = m_table_size / m_offset_size,
             .next = 0x3FFFF,
             .frames = std::max(m_last_frame, frame) - m_last_frame,
-            .type = EventTypes::index<T>()
+            .type = EventTypes::index_of<T>
         };
 
-        auto& last_event = m_events[EventTypes::index<T>()];
+        auto& last_event = m_events[EventTypes::index_of<T>];
 
         if (last_event.has_value()) {
             m_entries[*last_event].next = m_entries.size() - *last_event;
