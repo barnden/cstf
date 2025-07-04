@@ -23,10 +23,10 @@
 #include "CSTF/Serialize/Serializable.h"
 
 // Serializer specializations
-#include "CSTF/Serialize/Serializers/CSTFSerializer.h"
-#include "CSTF/Serialize/Serializers/BaseEventSerializer.h"
-#include "CSTF/Serialize/Serializers/GameDataSerializer.h"
-#include "CSTF/Serialize/Serializers/HeaderSerializer.h"
-#include "CSTF/Serialize/Serializers/TableSerializer.h"
+#include "CSTF/Serialize/Serializers/CSTF.h"
+#include "CSTF/Serialize/Serializers/Event.h"
+#include "CSTF/Serialize/Serializers/GameData.h"
+#include "CSTF/Serialize/Serializers/Header.h"
+#include "CSTF/Serialize/Serializers/Tables.h"
 
 // clang-fornat on

@@ -17,7 +17,19 @@ struct Serializer<LookupTable<Derived, Entry, Data, Alignment>> : BaseSerializer
         m_stream.pad(Alignment);
 
         u32 num_bytes = lut.m_entries.size() * sizeof(Entry);
-        m_stream->write(std::bit_cast<char const*>(&num_bytes), 4);
+        m_stream->write(reinterpret_cast<char*>(&num_bytes), sizeof(num_bytes));
+
+        u32 base = 0;
+
+        if (m_flags[Flags::PlaceLUTDataImmediatelyAfter]) {
+            base = static_cast<size_t>(m_stream->tellp()) + num_bytes + sizeof(base);
+        } else {
+            // FIXME: Implement.
+            base = static_cast<size_t>(m_stream->tellp()) + num_bytes + sizeof(base);
+            std::println("Serializer PlaceLUTDataImmediatelyAfter flag set but behaviour is undefined.");
+        }
+
+        m_stream->write(reinterpret_cast<char*>(&base), sizeof(base));
 
         for (auto&& entry : lut.m_entries) {
             m_stream->write(std::bit_cast<char const*>(&entry), sizeof(Entry));
@@ -38,7 +50,10 @@ struct Deserializer<LookupTable<Derived, Entry, Data, Alignment>> : BaseDeserial
         m_stream.consume_padding(Alignment);
 
         u32 num_bytes = 0;
-        m_stream->read(reinterpret_cast<char*>(&num_bytes), 4);
+        m_stream->read(reinterpret_cast<char*>(&num_bytes), sizeof(num_bytes));
+
+        u32 base = 0;
+        m_stream->read(reinterpret_cast<char*>(&base), sizeof(base));
 
         auto size = num_bytes / sizeof(Entry);
         lut.m_entries = std::vector<Entry>(size);
@@ -47,9 +62,10 @@ struct Deserializer<LookupTable<Derived, Entry, Data, Alignment>> : BaseDeserial
             entry.accept(to<Entry>());
         }
 
+        // FIXME: If PlaceLUTDataImmediatelyAfter is unset then we should probably
+        //        delay reading this until after reading all the LUT entries
+        //        so that we can reduce the seeking back-and-forth
         m_stream.consume_padding(Alignment);
-
-        size_t base = m_stream->tellg();
         for (auto&& entry : lut.m_entries) {
             to<Derived>().visit(static_cast<Derived&>(lut), entry, base);
         }
