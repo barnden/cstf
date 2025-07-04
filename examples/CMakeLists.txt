@@ -1,6 +1,7 @@
 FUNCTION(add_example example)
     ADD_EXECUTABLE(${example} "./${example}.cpp")
     TARGET_INCLUDE_DIRECTORIES(${example} SYSTEM PUBLIC "../include")
+    TARGET_INCLUDE_DIRECTORIES(${example} PUBLIC "./common")
 
     SET_TARGET_PROPERTIES(${example} PROPERTIES CXX_STANDARD 23)
     SET_TARGET_PROPERTIES(${example} PROPERTIES LINKER_LANGUAGE CXX)

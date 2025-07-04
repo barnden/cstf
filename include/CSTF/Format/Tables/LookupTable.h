@@ -25,11 +25,6 @@ protected:
     u32 m_offset_size = 4;
 
 public:
-    using derived_type = Derived;
-    using entry_type = Entry;
-    using data_type = Data;
-    static constexpr size_t alignment = Alignment;
-
     LookupTable() = default;
     virtual ~LookupTable() = default;
 

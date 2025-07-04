@@ -7,40 +7,13 @@
 
 #include <fstream>
 #include <print>
-#include <sstream>
 #include <string>
 #include <variant>
 
+#include "common/StreamEquality.h"
+
 using namespace cstf;
 using namespace cstf::serialize;
-
-[[noreturn]] void check_if_equal(auto& input, auto& output)
-{
-    bool identical = false;
-
-    using iterator_t = std::istreambuf_iterator<char>;
-    input.seekg(std::ios_base::beg);
-    iterator_t begin1 { input };
-    iterator_t begin2 {};
-
-    std::visit(
-        [&](auto& stream) {
-            stream.seekg(std::ios_base::beg);
-            begin2 = { stream };
-        },
-        output);
-
-    identical = std::equal(begin1, iterator_t {}, begin2);
-    std::print("CSTF file serialization and deserialization produced");
-
-    if (identical) {
-        std::println(" identical results.");
-        exit(0);
-    } else {
-        std::println(" different results.");
-        exit(1);
-    }
-}
 
 auto main(int argc, char** argv) -> int
 {
@@ -57,35 +30,53 @@ auto main(int argc, char** argv) -> int
 
     CSTF cstf {};
 
-    auto input = std::ifstream(cstf_read_path, std::ios::binary);
-    std::variant<std::stringstream, std::fstream> output;
+    stream_t input = std::fstream(
+        cstf_read_path,
+        std::ios::in | std::ios::binary);
 
-    if (!input.is_open()) {
-        std::println("Failed to open \"{}\" for reading.", cstf_read_path);
-        exit(0);
+    stream_t output;
+
+    if (auto* istream = std::get_if<std::fstream>(&input)) {
+        if (!istream->is_open()) {
+            std::println(
+                "Failed to open \"{}\" for reading.",
+                cstf_read_path);
+
+            exit(0);
+        }
     }
 
     if (cstf_write_path.has_value()) {
-        auto file = std::fstream(*cstf_write_path, std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
+        auto file = std::fstream(
+            *cstf_write_path,
+            std::ios::in | std::ios::out | std::ios::binary | std::ios::trunc);
 
         if (!file.is_open()) {
-            std::println("Failed to open \"{}\" for writing.", *cstf_write_path);
+            std::println(
+                "Failed to open \"{}\" for writing.",
+                *cstf_write_path);
+
             exit(0);
         }
 
         output = std::move(file);
+    } else {
+        output = std::stringstream {};
     }
 
-    {
-        BaseDeserializer deserializer(input);
+    std::visit(
+        [&](auto& stream) {
+            BaseDeserializer deserializer(stream);
 
-        // Example: Read round and event LUT entries, but not the actual event data
-        // deserializer.options().set(BaseDeserializer::Flags::ReadEventData, 0);
+            // Example: Read Round/Event LUT entries, but not the data
+            // deserializer.options()
+            //     .set(BaseDeserializer::Flags::ReadEventData, false);
 
-        deserializer(cstf);
+            deserializer(cstf);
+        },
+        input);
 
-        std::println("{}", cstf);
-    }
+    std::println("{}", cstf);
 
     std::visit(
         [&](auto& stream) {
@@ -95,5 +86,14 @@ auto main(int argc, char** argv) -> int
         },
         output);
 
-    check_if_equal(input, output);
+    // FIXME: Implement operator==() for CSTF related structs.
+    //        Due to the flexibility of the CSTF format, byte-wise comparison
+    //        of the streams is not the best way to determine equality.
+    auto identical = is_equal(input, output);
+
+    std::println(
+        "CSTF file deserialization and reserialization produced {} results.",
+        (identical ? "identical" : "different"));
+
+    return identical ? EXIT_SUCCESS : EXIT_FAILURE;
 }

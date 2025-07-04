@@ -8,8 +8,6 @@
 #include <ranges>
 #include <type_traits>
 
-#include "CSTF/Utility/Stream.h"
-
 #if _MSC_VER && !__INTEL_COMPILER
 #    define ASSERT_NOT_REACHED __assume(false);
 #else
@@ -57,7 +55,6 @@ public:
 
     constexpr auto to_string() const noexcept -> std::string
     {
-
         std::string result = std::format("{} does not implement to_string()", demangle(typeid(Derived)));
 
         return result;
