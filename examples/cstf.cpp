@@ -80,19 +80,20 @@ struct create_event<PlayerMoveEvent> {
 
 auto create_event_lut(std::mt19937& mt, size_t num_events)
 {
+    using Events = type_array<PlayerDamageEvent, PlayerMoveEvent>;
     EventLUT events;
 
-    auto dist_events = uniform_int<size_t>(0, EventTypes::size - 1uz);
-    auto dist_duration = uniform_int<u32>(0u, 15u);
+    auto dist_events = uniform_int<size_t>(0, Events::size - 1uz);
+    auto dist_duration = uniform_int<u32>(0u, 127u);
 
     auto frame = 0u;
 
     for (auto _ = 0uz; _ < num_events; _++) {
         auto event_type = dist_events(mt);
 
-        for_sequence<EventTypes::size>(
+        for_sequence<Events::size>(
             [&](auto I) {
-                using EventType = EventTypes::get<I>;
+                using EventType = Events::get<I>;
 
                 if (event_type != I)
                     return;

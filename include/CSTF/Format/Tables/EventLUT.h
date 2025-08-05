@@ -11,10 +11,17 @@ using namespace serialize;
 #pragma pack(1)
 struct EventLUTEntry : public IStringable<EventLUTEntry>,
                        public Serializable<EventLUTEntry> {
-    u32 offset : 20 {};
-    u32 next : 18 {};
-    u8 frames : 4 {};
-    u8 type : 6 {};
+    enum FieldSize {
+        OFFSET = 20,
+        NEXT = 18,
+        FRAMES = 4,
+        TYPE = 6
+    };
+
+    u32 offset : FieldSize::OFFSET {};
+    u32 next : FieldSize::NEXT {};
+    u8 frames : FieldSize::FRAMES {};
+    u8 type : FieldSize::TYPE {};
 
     [[nodiscard]] constexpr auto to_string() const noexcept -> std::string
     {
@@ -46,11 +53,18 @@ public:
     void add(T&& event, u32 frame = 0)
     {
         // Assumption is that frame is monotonically increasing.
+        static constexpr auto g_max_delta = (1ull << EventLUTEntry::FieldSize::FRAMES) - 1;
+        auto delta = std::max(m_last_frame, frame) - m_last_frame;
+
+        while (delta > g_max_delta) {
+            add(KeepAliveEvent({}), m_last_frame + g_max_delta);
+            delta = std::max(m_last_frame, frame) - m_last_frame;
+        }
 
         EventLUTEntry entry {
             .offset = m_table_size / m_offset_size,
             .next = 0x3FFFF,
-            .frames = std::max(m_last_frame, frame) - m_last_frame,
+            .frames = delta,
             .type = EventTypes::index_of<T>
         };
 

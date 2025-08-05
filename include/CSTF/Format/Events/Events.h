@@ -6,6 +6,8 @@
 #include "CSTF/Format/Events/PlayerDamageEvent.h"
 #include "CSTF/Format/Events/PlayerMoveEvent.h"
 
+#include "CSTF/Format/Events/KeepAliveEvent.h"
+
 namespace cstf {
 
 // Adapted from https://stackoverflow.com/a/62139716
@@ -40,6 +42,7 @@ struct type_array {
 
 using EventTypes = type_array<
     PlayerMoveEvent,
-    PlayerDamageEvent>;
+    PlayerDamageEvent,
+    KeepAliveEvent>;
 
 };
