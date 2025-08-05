@@ -3,7 +3,9 @@
 #include "CSTF/Format/Header.h"
 #include "CSTF/Serialize/Serializer.h"
 
+#include <cassert>
 #include <bit>
+#include <stdexcept>
 
 namespace cstf::serialize {
 template <>
@@ -12,8 +14,10 @@ struct Serializer<Header> : BaseSerializer {
     {
         m_stream->write(std::bit_cast<char const*>(&header.m_cstf_magic), sizeof(header.m_cstf_magic));
 
-        u8 flags = static_cast<u8>(header.m_flags.to_ulong());
-        m_stream->write(reinterpret_cast<char const*>(&flags), 1);
+        auto flags = header.m_flags.to_ulong();
+        constexpr auto num_bytes = ((header.m_flags.size() + 7) & 0xfffffff8ul) >> 3;
+
+        m_stream->write(reinterpret_cast<char const*>(&flags), num_bytes);
 
         m_stream->write(std::bit_cast<char const*>(&header.m_reserved), 2);
 
@@ -33,8 +37,17 @@ struct Deserializer<Header> : public BaseDeserializer {
     {
         m_stream->read(std::bit_cast<char*>(&header.m_cstf_magic), sizeof(header.m_cstf_magic));
 
-        u8 flags = 0;
-        m_stream->read(reinterpret_cast<char*>(&flags), 1);
+        if (!header.is_valid())
+            throw std::runtime_error(
+                std::format(
+                    R"([Deserializer] Header magic "{::#02x}" does not match the expected "{::#02x}".)",
+                    header.m_cstf_magic,
+                    header.g_magic_bytes)
+            );
+
+        auto flags = 0ul;
+        constexpr auto num_bytes = ((header.m_flags.size() + 7) & 0xfffffff8ul) >> 3;
+        m_stream->read(reinterpret_cast<char*>(&flags), num_bytes);
 
         header.m_flags.reset();
         for (auto i = 0; flags != 0; i++, flags >>= 1) {
